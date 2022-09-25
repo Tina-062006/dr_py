@@ -1,0 +1,1 @@
+9999999999{"name": "zope.event", "version": "4.5.0", "summary": "Very basic event publishing system", "platform": "", "requires_dist": ["setuptools", "Sphinx ; extra == 'docs'", "zope.testrunner ; extra == 'test'"], "requires_python": "", "files": [], "_cache_version": "1.0.0"}

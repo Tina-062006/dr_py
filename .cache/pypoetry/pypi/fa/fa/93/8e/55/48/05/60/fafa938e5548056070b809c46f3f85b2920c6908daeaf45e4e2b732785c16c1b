@@ -1,0 +1,1 @@
+9999999999{"name": "Flask-Migrate", "version": "3.1.0", "summary": "SQLAlchemy database migrations for Flask applications using Alembic.", "platform": "", "requires_dist": ["Flask (>=0.9)", "Flask-SQLAlchemy (>=1.0)", "alembic (>=0.7)"], "requires_python": ">=3.6", "files": [], "_cache_version": "1.0.0"}

@@ -1,0 +1,1 @@
+9999999999{"name": "backports.zoneinfo", "version": "0.2.1", "summary": "Backport of the standard library zoneinfo module", "platform": "", "requires_dist": ["tzdata ; extra == 'tzdata'", "importlib-resources ; python_version < \"3.7\""], "requires_python": ">=3.6", "files": [], "_cache_version": "1.0.0"}

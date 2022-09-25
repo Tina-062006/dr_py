@@ -1,0 +1,1 @@
+9999999999{"name": "func-timeout", "version": "4.3.5", "summary": "Python module which allows you to specify timeouts when calling any existing function. Also provides support for stoppable-threads", "platform": "", "requires_dist": null, "requires_python": null, "files": [], "_cache_version": "1.0.0"}

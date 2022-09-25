@@ -1,0 +1,1 @@
+9999999999{"name": "pyquery", "version": "1.4.3", "summary": "A jquery-like library for python", "platform": "", "requires_dist": ["lxml (>=2.1)", "cssselect (>0.7.9)"], "requires_python": "", "files": [], "_cache_version": "1.0.0"}

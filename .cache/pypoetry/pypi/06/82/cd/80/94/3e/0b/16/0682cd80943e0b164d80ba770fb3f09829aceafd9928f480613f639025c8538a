@@ -1,0 +1,1 @@
+9999999999{"name": "Js2Py", "version": "0.71", "summary": "JavaScript to Python Translator & JavaScript interpreter written in 100% pure Python.", "platform": "", "requires_dist": ["tzlocal (>=1.2)", "six (>=1.10)", "pyjsparser (>=2.5.1)"], "requires_python": "", "files": [], "_cache_version": "1.0.0"}
