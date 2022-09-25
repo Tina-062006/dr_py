@@ -1,0 +1,31 @@
+name: Projects
+# 触发器
+on:
+  schedule:
+    - cron: '0 19 * * 0' #每周天在国际标准时间19点(北京时间+8，即 03:00)
+  workflow_dispatch:
+#    inputs:
+#      root_sol:
+#        description: "TVBox"
+#        required: true
+#        default: "tv"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # 检出代码
+    - uses: actions/checkout@v2
+      # 删除旧的工作流
+    
+    - name: Clone project
+      run: |
+        git clone --depth=1 https://gitcode.net/qq_32394351/dr_py Projects
+        cp -r Projects/* ${{ github.workspace }}
+        rm -rf Projects
+    - name: Update files
+      uses: EndBug/add-and-commit@v7
+      with:
+        default_author: github_actions
+        message: 'update files'
+        add: ${{ github.workspace }}/*
