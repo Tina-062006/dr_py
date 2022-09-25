@@ -13,9 +13,10 @@ from utils.system import getHost
 from utils.config import playerConfig
 from utils.log import logger
 from utils.encode import base64Encode,baseDecode,fetch,post,request,getCryptoJS,getPreJs,buildUrl,getHome
-from utils.encode import verifyCode,setDetail,join,urljoin2,parseText
+from utils.encode import verifyCode,setDetail,join,urljoin2,parseText,requireCache
+from utils.encode import md5 as mmd5
 from utils.safePython import safePython
-from utils.parser import runPy,runJScode,JsObjectWrapper,PyJsObject
+from utils.parser import runPy,runJScode,JsObjectWrapper,PyJsObject,PyJsString
 from utils.htmlParser import jsoup
 from urllib.parse import urljoin,quote,unquote
 from concurrent.futures import ThreadPoolExecutor  # 引入线程池
@@ -25,19 +26,33 @@ from controllers.service import storage_service
 
 def setItem(key,value):
     lsg = storage_service()
+    if isinstance(key,PyJsString):
+        key = parseText(str(key))
+    if isinstance(value,PyJsString):
+        value = parseText(str(value))
     return lsg.setItem(key,value)
 
 def getItem(key,value=''):
     lsg = storage_service()
+    if isinstance(key,PyJsString):
+        key = parseText(str(key))
+    if isinstance(value,PyJsString):
+        value = parseText(str(value))
     return lsg.getItem(key,value)
 
 def clearItem(key):
     lsg = storage_service()
+    if isinstance(key,PyJsString):
+        key = parseText(str(key))
     return lsg.clearItem(key)
 
 def encodeUrl(url):
     # return base64Encode(quote(url))
     # return base64Encode(url)
+    # print(type(url))
+    if isinstance(url,PyJsString):
+        # obj = obj.to_dict()
+        url = parseText(str(url))
     return quote(url)
 
 def stringify(obj):
@@ -46,12 +61,23 @@ def stringify(obj):
         obj = parseText(str(obj))
     return json.dumps(obj, separators=(',', ':'), ensure_ascii=False)
 
+def requireObj(url):
+    if isinstance(url,PyJsString):
+        url = parseText(str(url))
+    return requireCache(url)
+
+def md5(text):
+    if isinstance(text,PyJsString):
+        text = parseText(str(text))
+    return mmd5(text)
+
 py_ctx = {
 'requests':requests,'print':print,'base64Encode':base64Encode,'baseDecode':baseDecode,
 'log':logger.info,'fetch':fetch,'post':post,'request':request,'getCryptoJS':getCryptoJS,
 'buildUrl':buildUrl,'getHome':getHome,'setDetail':setDetail,'join':join,'urljoin2':urljoin2,
 'PC_UA':PC_UA,'MOBILE_UA':MOBILE_UA,'UC_UA':UC_UA,'IOS_UA':IOS_UA,
-'setItem':setItem,'getItem':getItem,'clearItem':clearItem,'stringify':stringify
+'setItem':setItem,'getItem':getItem,'clearItem':clearItem,'stringify':stringify,'encodeUrl':encodeUrl,
+'requireObj':requireObj,'md5':md5
 }
 # print(getCryptoJS())
 
@@ -117,6 +143,7 @@ class CMS:
         self.RuleClass = RuleClass
         self.PlayParse = PlayParse
         host = rule.get('host','').rstrip('/')
+        host = unquote(host)
         timeout = rule.get('timeout',5000)
         homeUrl = rule.get('homeUrl','/')
         url = rule.get('url','')
@@ -191,6 +218,7 @@ class CMS:
             'getParse':self.getParse,
             'saveParse':self.saveParse,
             'oheaders':self.oheaders,
+            'headers':self.headers, # 通用免嗅需要
             'encoding':self.encoding,
             'name':self.title,
             'timeout':self.timeout,
@@ -539,7 +567,8 @@ class CMS:
             # print(html)
             try:
                 if self.double:
-                    items = pdfa(html, p[0])
+                    items = pdfa(html, p[0].replace('json:',''))
+                    # print(p[0])
                     # print(items)
                     # print(len(items))
                     for item in items:
@@ -673,6 +702,7 @@ class CMS:
         if fypage == 1 and self.test('[\[\]]',url):
             url = url.split('[')[1].split(']')[0]
         # print(url)
+        logger.info(url)
         p = self.一级
         jsp = jsoup(self.url)
         videos = []
@@ -722,10 +752,14 @@ class CMS:
             try:
                 r = requests.get(url, headers=self.headers, timeout=self.timeout)
                 html = self.checkHtml(r)
+                print(self.headers)
+                # print(html)
                 if is_json:
                     html = self.dealJson(html)
                     html = json.loads(html)
                 # print(html)
+                # with open('1.html',mode='w+',encoding='utf-8') as f:
+                #     f.write(html)
                 items = pdfa(html,p[0].replace('json:','',1))
             except:
                 pass
@@ -763,9 +797,171 @@ class CMS:
 
         return result
 
+    def 二级渲染(self,parse_str:'str|dict',**kwargs):
+        # *args是不定长参数 列表
+        # ** args是不定长参数字典
+        p = parse_str  # 二级传递解析表达式 js的obj json对象
+        detailUrl = kwargs.get('detailUrl','') # 不定长字典传递的二级详情页vod_id原始数据
+        url = kwargs.get('url','')  # 不定长字典传递的二级详情页链接智能拼接数据
+        vod = kwargs.get('vod',self.blank_vod()) # 最终要返回的二级详情页数据 默认空
+        html = kwargs.get('html','')  # 不定长字典传递的源码(如果不传才会在下面程序中去获取)
+        show_name = kwargs.get('show_name','') # 是否显示来源(用于drpy区分)
+        jsp = kwargs.get('jsp','')  # jsp = jsoup(self.url) 传递的jsp解析
+        fyclass = kwargs.get('fyclass','') # 二级传递的分类名称，可以得知进去的类别
+        if p == '*':  # 解析表达式为*默认一级直接变播放
+            vod['vod_play_from'] = '道长在线'
+            vod['vod_remarks'] = detailUrl
+            vod['vod_actor'] = '没有二级,只有一级链接直接嗅探播放'
+            # vod['vod_content'] = url if not show_name else f'({self.id}) {url}'
+            vod['vod_content'] = url
+            vod['vod_play_url'] = '嗅探播放$' + self.play_url + url
+
+        elif not p or (not isinstance(p, dict) and not isinstance(p, str)) or (isinstance(p, str) and not str(p).startswith('js:')):
+            pass
+        else:
+            is_json = p.get('is_json', False) if isinstance(p, dict) else False  # 二级里加is_json参数
+            pdfh = jsp.pjfh if is_json else jsp.pdfh
+            pdfa = jsp.pjfa if is_json else jsp.pdfa
+            pd = jsp.pj if is_json else jsp.pd
+            pq = jsp.pq
+            obj = {}
+            vod_name = ''
+            if not html: # 没传递html参数接下来智能获取
+                r = requests.get(url, headers=self.headers, timeout=self.timeout)
+                html = self.checkHtml(r)
+                if is_json:
+                    html = self.dealJson(html)
+                    html = json.loads(html)
+            if p.get('title'):
+                p1 = p['title'].split(';')
+                vod_name = pdfh(html, p1[0]).replace('\n', ' ')
+                # title = '\n'.join([pdfh(html,i).replace('\n',' ') for i in p1])
+                title = '\n'.join([','.join([pdfh(html, pp1).strip() for pp1 in i.split('+')]) for i in p1])
+                # print(title)
+                obj['title'] = title
+            if p.get('desc'):
+                try:
+                    p1 = p['desc'].split(';')
+                    desc = '\n'.join([pdfh(html, i).replace('\n', ' ') for i in p1])
+                    obj['desc'] = desc
+                except:
+                    pass
+
+            if p.get('content'):
+                p1 = p['content'].split(';')
+                try:
+                    content = '\n'.join([pdfh(html, i).replace('\n', ' ') for i in p1])
+                    obj['content'] = content
+                except:
+                    pass
+
+            if p.get('img'):
+                p1 = p['img']
+                try:
+                    img = pd(html, p1)
+                    obj['img'] = img
+                except Exception as e:
+                    logger.info(f'二级图片定位失败,但不影响使用{e}')
+
+            vod = {
+                "vod_id": detailUrl,
+                "vod_name": vod_name,
+                "vod_pic": obj.get('img', ''),
+                "type_name": obj.get('title', ''),
+                "vod_year": "",
+                "vod_area": "",
+                "vod_remarks": obj.get('desc', ''),
+                "vod_actor": "",
+                "vod_director": "",
+                "vod_content": obj.get('content', '')
+            }
+
+            vod_play_from = '$$$'
+            playFrom = []
+            if p.get('重定向') and str(p['重定向']).startswith('js:'):
+                headers['Referer'] = getHome(url)
+                py_ctx.update({
+                    'input': url,
+                    'html': html,
+                    'TYPE': 'detail',  # 海阔js环境标志
+                    'cateID': fyclass,  # 当前分类
+                    'oheaders': self.d.oheaders,
+                    'fetch_params': {'headers': self.headers, 'timeout': self.d.timeout, 'encoding': self.d.encoding},
+                    'd': self.d,
+                    'getParse': self.d.getParse,
+                    'saveParse': self.d.saveParse,
+                    'jsp': jsp, 'setDetail': setDetail,
+                })
+                ctx = py_ctx
+                # print(ctx)
+                rcode = p['重定向'].replace('js:', '', 1)
+                jscode = getPreJs() + rcode
+                # print(jscode)
+                loader, _ = runJScode(jscode, ctx=ctx)
+                # print(loader.toString())
+                logger.info(f'开始执行二级重定向代码:{rcode}')
+                html = loader.eval('html')
+                if isinstance(vod, JsObjectWrapper):
+                    html = str(html)
+
+            if p.get('tabs'):
+                vodHeader = []
+                # print(p['tabs'].split(';')[0])
+                vHeader = pdfa(html, p['tabs'].split(';')[0])
+                # print(f'线路列表数:{len((vodHeader))}')
+                # print(vodHeader)
+                if not is_json:
+                    for v in vHeader:
+                        # 过滤排除掉线路标题
+                        v_title = pq(v).text()
+                        if self.tab_exclude and jsp.test(self.tab_exclude, v_title):
+                            continue
+                        vodHeader.append(v_title)
+                else:
+                    vodHeader = vHeader
+            else:
+                vodHeader = ['道长在线']
+
+            # print(vodHeader)
+
+            for v in vodHeader:
+                playFrom.append(v)
+            vod_play_from = vod_play_from.join(playFrom)
+
+            vod_play_url = '$$$'
+            vod_tab_list = []
+            if p.get('lists'):
+                for i in range(len(vodHeader)):
+                    tab_name = str(vodHeader[i])
+                    tab_ext = p['tabs'].split(';')[1] if len(p['tabs'].split(';')) > 1 else ''
+                    p1 = p['lists'].replace('#idv', tab_name).replace('#id', str(i))
+                    tab_ext = tab_ext.replace('#idv', tab_name).replace('#id', str(i))
+                    vodList = pdfa(html, p1)  # 1条线路的选集列表
+                    # print(vodList)
+                    # vodList = [pq(i).text()+'$'+pd(i,'a&&href') for i in vodList]  # 拼接成 名称$链接
+                    if self.play_parse:  # 自动base64编码
+                        vodList = [(pdfh(html, tab_ext) if tab_ext else tab_name) + '$' + self.play_url + encodeUrl(i) for i
+                                   in vodList] if is_json else \
+                            [pq(i).text() + '$' + self.play_url + encodeUrl(pd(i, 'a&&href')) for i in vodList]  # 拼接成 名称$链接
+                    else:
+                        vodList = [(pdfh(html, tab_ext) if tab_ext else tab_name) + '$' + self.play_url + i for i in
+                                   vodList] if is_json else \
+                            [pq(i).text() + '$' + self.play_url + pd(i, 'a&&href') for i in vodList]  # 拼接成 名称$链接
+                    vlist = '#'.join(vodList)  # 拼多个选集
+                    vod_tab_list.append(vlist)
+                vod_play_url = vod_play_url.join(vod_tab_list)
+            # print(vod_play_url)
+            vod['vod_play_from'] = vod_play_from
+            # print(vod_play_from)
+            vod['vod_play_url'] = vod_play_url
+
+        if show_name:
+            vod['vod_content'] = f'({self.id}){vod.get("vod_content", "")}'
+        return vod
+
     def detailOneVod(self,id,fyclass='',show_name=False):
+        vod = self.blank_vod()
         detailUrl = str(id)
-        vod = {}
         if not detailUrl.startswith('http') and not '/' in detailUrl:
             url = self.detailUrl.replace('fyid', detailUrl).replace('fyclass',fyclass)
         elif '/' in detailUrl:
@@ -775,32 +971,15 @@ class CMS:
         logger.info(f'进入详情页: {url}')
         try:
             p = self.二级  # 解析
-            if p == '*':
-                vod = self.blank_vod()
-                vod['vod_play_from'] = '道长在线'
-                vod['vod_remarks'] = detailUrl
-                vod['vod_actor'] = '没有二级,只有一级链接直接嗅探播放'
-                vod['vod_content'] = url if not show_name else f'({self.id}) {url}'
-                vod['vod_play_url'] = '嗅探播放$'+self.play_url+url
-                print(vod)
-                return vod
-
-            if not p:
-                return vod
-            if not isinstance(p,dict) and not isinstance(p,str):
-                return vod
-            if isinstance(p,str) and not str(p).startswith('js:'):
-                return vod
-
             jsp = jsoup(self.url)
-
-            is_json = p.get('is_json',False) if isinstance(p,dict) else False # 二级里加is_json参数
             is_js = isinstance(p,str) and str(p).startswith('js:') # 是js
             if is_js:
                 headers['Referer'] = getHome(url)
                 py_ctx.update({
                     'input': url,
                     'TYPE': 'detail',  # 海阔js环境标志
+                    # 'VID': id,  # 传递的vod_id
+                    '二级': self.二级渲染,  # 二级解析函数,可以解析dict
                     'cateID': fyclass,  # 当前分类
                     'oheaders': self.d.oheaders,
                     'fetch_params': {'headers': self.headers, 'timeout': self.d.timeout, 'encoding': self.d.encoding},
@@ -818,148 +997,15 @@ class CMS:
                 vod = loader.eval('vod')
                 if isinstance(vod,JsObjectWrapper):
                     vod = vod.to_dict()
+                    if show_name:
+                        vod['vod_content'] = f'({self.id}){vod.get("vod_content", "")}'
                 else:
-                    vod = {}
-                # print(type(vod))
-                # print(vod)
+                    vod = self.blank_vod()
             else:
-                pdfh = jsp.pjfh if is_json else jsp.pdfh
-                pdfa = jsp.pjfa if is_json else jsp.pdfa
-                pd = jsp.pj if is_json else jsp.pd
-                pq = jsp.pq
-                obj = {}
-                vod_name = ''
-                r = requests.get(url, headers=self.headers, timeout=self.timeout)
-                html = self.checkHtml(r)
-                if is_json:
-                    html = self.dealJson(html)
-                    html = json.loads(html)
-                if p.get('title'):
-                    p1 = p['title'].split(';')
-                    vod_name = pdfh(html,p1[0]).replace('\n',' ')
-                    # title = '\n'.join([pdfh(html,i).replace('\n',' ') for i in p1])
-                    title = '\n'.join([','.join([pdfh(html, pp1).strip() for pp1 in i.split('+')]) for i in p1])
-                    # print(title)
-                    obj['title'] = title
-                if p.get('desc'):
-                    try:
-                        p1 = p['desc'].split(';')
-                        desc = '\n'.join([pdfh(html,i).replace('\n',' ') for i in p1])
-                        obj['desc'] = desc
-                    except:
-                        pass
-
-                if p.get('content'):
-                    p1 = p['content'].split(';')
-                    try:
-                        content = '\n'.join([pdfh(html,i).replace('\n',' ') for i in p1])
-                        obj['content'] = content
-                    except:
-                        pass
-
-                if p.get('img'):
-                    p1 = p['img']
-                    try:
-                        img = pd(html,p1)
-                        obj['img'] = img
-                    except Exception as e:
-                        logger.info(f'二级图片定位失败,但不影响使用{e}')
-
-                vod = {
-                    "vod_id": detailUrl,
-                    "vod_name": vod_name,
-                    "vod_pic": obj.get('img',''),
-                    "type_name": obj.get('title',''),
-                    "vod_year": "",
-                    "vod_area": "",
-                    "vod_remarks": obj.get('desc',''),
-                    "vod_actor": "",
-                    "vod_director": "",
-                    "vod_content": obj.get('content','')
-                }
-
-                vod_play_from = '$$$'
-                playFrom = []
-                if p.get('重定向') and str(p['重定向']).startswith('js:'):
-                    headers['Referer'] = getHome(url)
-                    py_ctx.update({
-                        'input': url,
-                        'html': html,
-                        'TYPE': 'detail',  # 海阔js环境标志
-                        'cateID': fyclass,  # 当前分类
-                        'oheaders': self.d.oheaders,
-                        'fetch_params': {'headers': self.headers, 'timeout': self.d.timeout, 'encoding': self.d.encoding},
-                        'd': self.d,
-                        'getParse': self.d.getParse,
-                        'saveParse': self.d.saveParse,
-                        'jsp': jsp, 'setDetail': setDetail,
-                    })
-                    ctx = py_ctx
-                    # print(ctx)
-                    rcode = p['重定向'].replace('js:', '', 1)
-                    jscode = getPreJs() + rcode
-                    # print(jscode)
-                    loader, _ = runJScode(jscode, ctx=ctx)
-                    # print(loader.toString())
-                    logger.info(f'开始执行二级重定向代码:{rcode}')
-                    html = loader.eval('html')
-                    if isinstance(vod, JsObjectWrapper):
-                        html = str(html)
-
-                if p.get('tabs'):
-                    vodHeader = []
-                    # print(p['tabs'].split(';')[0])
-                    vHeader = pdfa(html,p['tabs'].split(';')[0])
-                    # print(f'线路列表数:{len((vodHeader))}')
-                    # print(vodHeader)
-                    if not is_json:
-                        for v in vHeader:
-                            # 过滤排除掉线路标题
-                            v_title = pq(v).text()
-                            if self.tab_exclude and jsp.test(self.tab_exclude, v_title):
-                                continue
-                            vodHeader.append(v_title)
-                    else:
-                        vodHeader = vHeader
-                else:
-                    vodHeader = ['道长在线']
-
-                # print(vodHeader)
-
-                for v in vodHeader:
-                    playFrom.append(v)
-                vod_play_from = vod_play_from.join(playFrom)
-
-                vod_play_url = '$$$'
-                vod_tab_list = []
-                if p.get('lists'):
-                    for i in range(len(vodHeader)):
-                       tab_name = str(vodHeader[i])
-                       tab_ext = p['tabs'].split(';')[1] if len(p['tabs'].split(';')) > 1 else ''
-                       p1 = p['lists'].replace('#idv',tab_name).replace('#id',str(i))
-                       tab_ext = tab_ext.replace('#idv',tab_name).replace('#id',str(i))
-                       vodList = pdfa(html,p1) # 1条线路的选集列表
-                       # print(vodList)
-                       # vodList = [pq(i).text()+'$'+pd(i,'a&&href') for i in vodList]  # 拼接成 名称$链接
-                       if self.play_parse: # 自动base64编码
-                           vodList = [(pdfh(html,tab_ext) if tab_ext else tab_name)+'$'+self.play_url+encodeUrl(i) for i in vodList] if is_json else\
-                               [pq(i).text()+'$'+self.play_url+encodeUrl(pd(i,'a&&href')) for i in vodList]  # 拼接成 名称$链接
-                       else:
-                           vodList = [(pdfh(html, tab_ext) if tab_ext else tab_name) + '$' + self.play_url + i for i in
-                                      vodList] if is_json else \
-                               [pq(i).text() + '$' + self.play_url + pd(i, 'a&&href') for i in vodList]  # 拼接成 名称$链接
-                       vlist = '#'.join(vodList) # 拼多个选集
-                       vod_tab_list.append(vlist)
-                    vod_play_url = vod_play_url.join(vod_tab_list)
-                # print(vod_play_url)
-                vod['vod_play_from'] = vod_play_from
-                # print(vod_play_from)
-                vod['vod_play_url'] = vod_play_url
-                # print(vod_play_url)
+                vod = self.二级渲染(p,detailUrl=detailUrl,url=url,vod=vod,show_name=show_name,jsp=jsp,fyclass=fyclass)
         except Exception as e:
             logger.info(f'{self.getName()}获取单个详情页{detailUrl}出错{e}')
-        if show_name:
-            vod['vod_content'] = f'({self.id}){vod.get("vod_content","")}'
+
         return vod
 
     def detailContent(self, fypage, array,show_name=False):
@@ -1016,6 +1062,7 @@ class CMS:
                 'oheaders': self.d.oheaders,
                 'fetch_params': {'headers': self.headers, 'timeout': self.d.timeout, 'encoding': self.d.encoding},
                 'd': self.d,
+                'MY_PAGE': fypage,
                 'KEY': key,  # 搜索关键字
                 'TYPE': 'search',  # 海阔js环境标志
                 'detailUrl': self.detailUrl or '',
@@ -1050,7 +1097,7 @@ class CMS:
                 if is_json:
                     html = self.dealJson(html)
                     html = json.loads(html)
-                # print(html)
+
                 if not is_json and html.find('输入验证码') > -1:
                     cookie = verifyCode(url,self.headers,self.timeout,self.retry_count,self.ocr_api)
                     # cookie = ''
@@ -1063,6 +1110,9 @@ class CMS:
                     r = requests.get(url, headers=self.headers, timeout=self.timeout)
                     r.encoding = self.encoding
                     html = r.text
+                if not show_name and not str(html).find(key) > -1:
+                    logger.info('搜索结果源码未包含关键字,疑似搜索失败,正为您打印结果源码')
+                    print(html)
 
                 items = pdfa(html,p[0].replace('json:','',1))
                 # print(len(items),items)
@@ -1097,7 +1147,7 @@ class CMS:
                             "vod_content": content, # 无用参数
                         })
                     except Exception as e:
-                        print(e)
+                        print(f'搜索列表解析发生错误:{e}')
                         pass
                 # print(videos)
             except Exception as e:
