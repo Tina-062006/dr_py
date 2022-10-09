@@ -4,7 +4,7 @@
   <a href="https://alist.nn.ci"><img height="100px" alt="logo" src="https://gitcode.net/qq_32394351/dr_py/-/raw/1fe0e082b1ceacc4469d7f175a605cc2edf0bab0/static/img/icon.png"/></a>
   <p><em>🗂️A webServer convert web and x5 movie sites to cms api data</em></p>
   <a href="https://gitcode.net/qq_32394351/dr_py/-/releases">
-    <img src="https://img.shields.io/badge/version-3.7.4-blue" alt="latest version" />
+    <img src="https://img.shields.io/badge/version-3.8.1-blue" alt="latest version" />
   </a>
   <a href="https://gitcode.net/qq_32394351/dr_py/-/issues">
     <img src="https://img.shields.io/badge/discussions-2-orange" alt="discussions" />
@@ -46,6 +46,14 @@
 [dockerfile教程](https://blog.csdn.net/qq_46158060/article/details/125718218)   
 [获取本地设备信息](https://blog.csdn.net/cui_yonghua/article/details/125508991)   
 [获取本地设备信息](https://m.jb51.net/article/140716.htm)   
+###### 2022/10/09
+- [X] 1.v3.8.2 本地drpy.js抄了一下影魔代码实现了base64加解密和md5加密并且引入全局的CryptoJS对象
+- [X] 2.v3.8.3 本地drpy.js抄了一下影魔代码不用import模板改成init加载模板解决换源冲突问题
+- [X] 3.v3.8.4 抄了影魔最新的代码并更新版本
+###### 2022/10/08
+- [X] 1.v3.8.1 本地drpy.js优化优酷兼容,已全部完善
+###### 2022/10/07
+- [X] 1.v3.8.0 本地drpy.js除优酷不支持外已全部完善
 ###### 2022/09/27
 - [X] 1.v3.7.17 增加真不卡源
 ###### 2022/09/26

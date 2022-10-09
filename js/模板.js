@@ -1,4 +1,5 @@
-Object.assign = function () {
+if (typeof Object.assign != 'function') {
+    Object.assign = function () {
 	var target = arguments[0];
     for (var i = 1; i < arguments.length; i++) {
         var source = arguments[i];
@@ -10,6 +11,8 @@ Object.assign = function () {
     }
     return target;
 };
+}
+
 var mubanDict = { // 模板字典
  mxpro:{
     title:'',
@@ -33,6 +36,24 @@ var mubanDict = { // 模板字典
     一级:'body a.module-poster-item.module-item;a&&title;.lazyload&&data-original;.module-item-note&&Text;a&&href',
     二级:{"title":"h1&&Text;.module-info-tag&&Text","img":".lazyload&&data-original","desc":".module-info-item:eq(1)&&Text;.module-info-item:eq(2)&&Text;.module-info-item:eq(3)&&Text","content":".module-info-introduction&&Text","tabs":".module-tab-item","lists":".module-play-list:eq(#id) a"},
     搜索:'body .module-item;.module-card-item-title&&Text;.lazyload&&data-original;.module-item-note&&Text;a&&href;.module-info-item-content&&Text',
+},
+mxone5:{
+title:'',
+host:'',
+url:'/show/fyclass--------fypage---.html',
+searchUrl:'/search/**----------fypage---.html',
+searchable:2,//是否启用全局搜索,
+quickSearch:0,//是否启用快速搜索,
+filterable:0,//是否启用分类筛选,
+class_parse:'.nav-menu-items&&li;a&&Text;a&&href;.*/(.*?).html',
+play_parse:true,
+lazy:'',
+limit:6,
+推荐:'.module-list;.module-items&&.module-item;a&&title;img&&data-src;.module-item-text&&Text;a&&href',
+double:true, // 推荐内容是否双层定位
+一级:'.module-items .module-item;a&&title;img&&data-src;.module-item-text&&Text;a&&href',
+二级:{"title":"h1&&Text;.tag-link&&Text","img":".module-item-pic&&img&&data-src","desc":".video-info-items:eq(0)&&Text;.video-info-items:eq(1)&&Text;.video-info-items:eq(2)&&Text;.video-info-items:eq(3)&&Text","content":".vod_content&&Text","tabs":".module-tab-item","lists":".module-player-list:eq(#id)&&.scroll-content&&a"},
+搜索:'.module-items .module-search-item;a&&title;img&&data-src;.video-serial&&Text;a&&href',
 },
 首图:{
     title:'',
@@ -152,3 +173,4 @@ vfed:{
 
 };
 var muban = JSON.parse(JSON.stringify(mubanDict));
+export default muban;

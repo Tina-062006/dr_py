@@ -124,10 +124,16 @@ def get_files(name):
     return response
 
 @home.route('/txt/<path:filename>')
-def custom_static(filename):
+def custom_static_txt(filename):
     # 自定义静态目录 {{ url_for('custom_static',filename='help.txt')}}
     # print(filename)
     return send_from_directory('txt', filename)
+
+@home.route('/libs/<path:filename>')
+def custom_static_libs(filename):
+    # 自定义静态目录 {{ url_for('custom_static',filename='help.txt')}}
+    # print(filename)
+    return send_from_directory('libs', filename)
 
 # @home.route('/txt/<name>')
 # def get_txt_files(name):
@@ -186,7 +192,7 @@ def merged_hide(merged_config):
     all_cnt = len(merged_config['sites'])
 
     def filter_show(x):
-        name = x['api'].split('rule=')[1].split('&')[0] if 'rule=' in x['api'] else x['key']
+        name = x['api'].split('rule=')[1].split('&')[0] if 'rule=' in x['api'] else x['key'].replace('dr_','')
         # print(name)
         return name not in hide_rule_names
 
@@ -207,6 +213,8 @@ def config_render(mode):
     host = getHost(mode)
     # ali_token = lsg.getItem('ALI_TOKEN')
     ali_token = new_conf.ALI_TOKEN
+    js_mode = int(new_conf.JS_MODE or 0)
+    print(f'{type(js_mode)} jsmode:{js_mode}')
     # print(ali_token)
     customConfig = getCustonDict(host,ali_token)
     # print(customConfig)
@@ -218,10 +226,10 @@ def config_render(mode):
     alists = getAlist()
     alists_str = json.dumps(alists, ensure_ascii=False)
     live_url = get_live_url(new_conf,mode)
-    rules = getRules('js')
+    rules = getRules('js',js_mode)
     rules = get_multi_rules(rules)
     # html = render_template('config.txt',rules=getRules('js'),host=host,mode=mode,jxs=jxs,base64Encode=base64Encode,config=new_conf)
-    html = render_template('config.txt',pys=pys,rules=rules,host=host,mode=mode,jxs=jxs,alists=alists,alists_str=alists_str,live_url=live_url,config=new_conf)
+    html = render_template('config.txt',pys=pys,rules=rules,host=host,mode=mode,js_mode=js_mode,jxs=jxs,alists=alists,alists_str=alists_str,live_url=live_url,config=new_conf)
     merged_config = custom_merge(parseText(html),customConfig)
     # print(merged_config['sites'])
 
@@ -242,23 +250,23 @@ def config_gen():
     store_conf_dict = lsg.getStoreConfDict()
     new_conf.update(store_conf_dict)
     try:
-        lsg = storage_service()
         use_py = lsg.getItem('USE_PY')
+        js_mode = int(new_conf.JS_MODE or 0)
         pys = getPys() if use_py else False
         alists = getAlist()
         alists_str = json.dumps(alists,ensure_ascii=False)
-        rules = getRules('js')
+        rules = getRules('js',js_mode)
         rules = get_multi_rules(rules)
         host0 = getHost(0)
         jxs = getJxs(host=host0)
-        set_local = render_template('config.txt',pys=pys,rules=rules,alists=alists,alists_str=alists_str,live_url=get_live_url(new_conf,0),mode=0,host=host0,jxs=jxs)
+        set_local = render_template('config.txt',pys=pys,rules=rules,alists=alists,alists_str=alists_str,live_url=get_live_url(new_conf,0),mode=0,js_mode=js_mode,host=host0,jxs=jxs)
         # print(set_local)
         host1 = getHost(1)
         jxs = getJxs(host=host1)
-        set_area = render_template('config.txt',pys=pys,rules=rules,alists=alists,alists_str=alists_str,live_url=get_live_url(new_conf,1),mode=1,host=host1,jxs=jxs)
+        set_area = render_template('config.txt',pys=pys,rules=rules,alists=alists,alists_str=alists_str,live_url=get_live_url(new_conf,1),mode=1,js_mode=js_mode,host=host1,jxs=jxs)
         host2 = getHost(2)
         jxs = getJxs(host=host2)
-        set_online = render_template('config.txt',pys=pys,rules=rules,alists=alists,alists_str=alists_str,live_url=get_live_url(new_conf,2),mode=1,host=host2,jxs=jxs)
+        set_online = render_template('config.txt',pys=pys,rules=rules,alists=alists,alists_str=alists_str,live_url=get_live_url(new_conf,2),mode=1,js_mode=js_mode,host=host2,jxs=jxs)
         ali_token = new_conf.ALI_TOKEN
         with open('txt/pycms0.json','w+',encoding='utf-8') as f:
             customConfig = getCustonDict(host0,ali_token)
