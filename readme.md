@@ -46,7 +46,30 @@
 [golang最好的js引擎-otto](https://github.com/robertkrimen/otto)   
 [dockerfile教程](https://blog.csdn.net/qq_46158060/article/details/125718218)   
 [获取本地设备信息](https://blog.csdn.net/cui_yonghua/article/details/125508991)   
-[获取本地设备信息](https://m.jb51.net/article/140716.htm)   
+[获取本地设备信息](https://m.jb51.net/article/140716.htm) 
+###### 2022/10/17
+- [X] 3.9.8beta2 全局关闭https对应的ssl证书验证
+###### 2022/10/16
+- [X] 3.9.8 完成ddys选集播放和免嗅(可惜我刚弄完没播放俩个剧就被封ip了)
+- [X] 3.9.8beta1 增加了俩自建js解析
+###### 2022/10/15
+- [X] beta2 修复dealJson导致的兔小贝一级分类无数据
+- [X] beta6 尝试完善低端影视,增加tabs和lists支持js:写法(js模式0和模式1同步测试)
+###### 2022/10/14
+- [X] todo:推荐支持* 自动集成一级定位
+- [X] todo:辅助嗅探
+- [X] done:推荐支持* 自动继承一级定位(参考短视频.js)
+- [X] done:drpy.js优化,drpy.ym.js完美支持pythonbox及俊版tvb
+- [X] 升级版本至3.9.7
+- [X] 3.9.7beta1 更新py和js的酷云77搜索
+###### 2022/10/13
+- [X] 3.9.5修复凌云影视源并增加短视模板
+- [X] 增加秋霞影视,ddys等半成品(优化代码兼容取style属性的情况自动提取链接)
+- [X] 更新drpy.js,drpy.min.js等本地js运行支持库
+- [X] 3.9.6修复drpy的一个严重bug(pdfh死循环)
+###### 2022/10/12
+- [X] js模式2动态配置链接支持多种壳子
+- [X] 增加/lives?path=base/live.txt路由
 ###### 2022/10/11
 - [X] 增加自建解析加密示例
 - [X] 发布3.9.0镜像,重大升级，优化js装载速度
@@ -333,4 +356,7 @@ host:'https://yanetflix.com',
 url:'/index.php/vod/show/id/fyclass/page/fypage.html',
 class_parse:'.navbar-items li:gt(1):lt(6);a&&Text;a&&href;.*/(.*?).html',
 });
+
+js:内置变量
+input,html,VODS,VOD,TABS,LISTS
 ```
