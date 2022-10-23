@@ -1,6 +1,7 @@
 js:
 var d = [];
-VOD={vod_id:input};
+// VOD={vod_id:input};
+VOD={};
 let html=request(input);
 // print(html);
 let json = JSON.parse(html);
@@ -45,6 +46,7 @@ if(/优酷/.test(name)&&video_lists.length>0){//获取简介详情
             log('海报渲染发生错误:'+e.message);
             print(json);
             VOD.vod_remarks = name;
+            VOD.vod_id = input;
         }
     }
 }
@@ -60,9 +62,9 @@ function adhead(url){
     // }
     return urlencode(url)
 }
-if(typeof(play_url)==='undefined'){
-    var play_url = '';
-}
+// if(typeof(play_url)==='undefined'){
+//     var play_url = '';
+// }
 play_url = play_url.replace('&play_url=','&type=json&play_url=');
 video_lists.forEach(function (it){
     let url = 'https://v.youku.com/v_show/id_' + it.videoId + '.html';

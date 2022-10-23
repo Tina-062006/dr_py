@@ -40,15 +40,54 @@
 </a>
 
 [JS引擎的选择](./python最强js引擎.md)  
-[搭建教程](./安卓本地搭建说明.md) | [install_help](./安卓本地搭建说明.md)  |[goorm](./道长乱说.md)  
+[搭建教程](./安卓本地搭建说明.md) | [install_help](./安卓本地搭建说明.md)  |[goorm](./道长乱说.md) |[大佬地盘](./大佬友链.md) 
 [dr项目QQ官群](https://qm.qq.com/cgi-bin/qm/qr?k=H2KwcXrMdiR5M2blHR5gjZzPfN_S3N_C&jump_from=webapi)  
 [参考T4](https://github.com/sec-an/TV_Spider/blob/main/spider/sp360.py)  
 [golang最好的js引擎-otto](https://github.com/robertkrimen/otto)   
 [dockerfile教程](https://blog.csdn.net/qq_46158060/article/details/125718218)   
 [获取本地设备信息](https://blog.csdn.net/cui_yonghua/article/details/125508991)   
-[获取本地设备信息](https://m.jb51.net/article/140716.htm) 
+[获取本地设备信息](https://m.jb51.net/article/140716.htm)
+###### 2022/10/23
+- [X] 新增几个源 包括虎牙直播
+- [X] 设置中心增加仙人模式开关(自动识别不同设备返回不同的drpy接口,关闭的话只会走drpy.min.js)
+- [X] 3.9.15beta5 修复后台管理无法进入的bug,规定js源必须包含 var rule字符,不然不识别。中间仅有一个空格
+- [X] 3.9.16 增加源属性:图片来源 荐片源图片带上图片来源(目前仅爱佬版tvb可用)
+- [X] 优化饭团源,增加其他几个飞机源
+###### 2022/10/22
+- [X] 新增几个直播源
+- [X] 优化没有二级的情况自动带入一级图片和标题 @@分割
+- [X] 修复 JRKAN直播 二级智能拼接链接不正常的问题
+- [X] 学生录像一级用js重写(urljoin没毛病.网址结构有问题,只能如此了,仅支持js1)
+- [X] 完善荐片源的筛选
+- [X] 3.9.15beta2 优化jrkan直播二级 学生直播二级 新增 爱车MV
+###### 2022/10/21
+- [X] 源新增了play_json属性和与之对应的哔哩直播,jrs看直播等源
+- [X] 修复俊版无法搜索问题(还需要壳子彻底解决console.log函数问题,无法打印大数据)
+- [X] 升级至3.9.14,drpy.js代码中开始记录版本号
+- [X] 升级至3.9.14beta2 json优化并增加荐片源
+###### 2022/10/20
+- [X] 新增了几个源
+- [X] 修复乐猪TV源并记录已知问题
+- [X] 升级版本至:3.9.12 二级增加新特性 tab_text:'body&&Text',list_text:'body&&Text',list_url:'a&&href'
+- [X] drpy.js增加post方法,优化调用逻辑,修复奇优搜索
+- [X] 新增gaze源,只完成了推荐和一级
+- [X] 3.9.13 修复部分源历史记录异常问题
+- [X] 3.9.13beta1 增加了3个新源
+###### 2022/10/19
+- [X] 源增加 filter_def 属性用于指定不同分类下的默认筛选条件
+- [X] 修改搭建文档给出armv7设备的drpy运行兼容方案
+- [X] 增加厂长资源,just live等多个源,其中just live这个源用到了新特性 filter_def
+- [X] 版本更新至 3.9.11
+###### 2022/10/18
+- [ ] 没有二级只有一级的情况下想办法把标题和图片带进去二级。(这个想法实现难度太大了,直接放弃,不要瞎搞了)
+- [X] 3.9.10 (修复js模式1搜索不到结果,修复js模式0二级选集和线路异常,优化drpy聚搜)
+- [X] 源增加属性 模板,可用作模板继承
 ###### 2022/10/17
 - [X] 3.9.8beta2 全局关闭https对应的ssl证书验证
+- [X] 3.9.9 增加新特性,简写快看源,修复小品网推荐显示
+- [X] 新增 推荐和搜索支持用*替代继承一级对应位置的列表,标题,图片,描述,详情,内容等定位
+- [X] drpy豆瓣推荐支持本地js
+- [X] 3.9.9beta2 修复指定分类第一页后无法翻页的问题
 ###### 2022/10/16
 - [X] 3.9.8 完成ddys选集播放和免嗅(可惜我刚弄完没播放俩个剧就被封ip了)
 - [X] 3.9.8beta1 增加了俩自建js解析
@@ -312,6 +351,17 @@ var rule = {
     quickSearch:0,//是否启用快速搜索,
     filterable:0,//是否启用筛选,
     filter:{},// 筛选条件字典
+    // 默认筛选条件字典(不同分类可以指定同样筛选参数的不同默认值)
+    filter_def:{
+        douyu:{
+        area:'一起看',
+        other:'..'
+        },
+        huya:{
+        area:'影音馆',
+        other:'..'
+        }
+    }, 
     // 筛选网站传参,会自动传到分类链接下(本示例中的url参数)-url里参数为fyfilter,可参考蓝莓影视.js
     filter_url:'style={{fl.style}}&zone={{fl.zone}}&year={{fl.year}}&fee={{fl.fee}}&order={{fl.order}}',
     // 注意,由于猫有配置缓存,搜索配置没法热加载，修改了js不需要重启服务器
@@ -331,18 +381,32 @@ var rule = {
     tab_exclude:'',
     // 服务器解析播放
     play_parse:true,
+    // play_json　传数组或者　类　true/false 比如 0,1 如果不传会内部默认处理 不传和传0可能效果不同
+    // 效果等同说明: play_json:[{re:'*', json:{jx:0, parse:1}}], 等同于 play_json:0,
+    play_json:[{
+        re:'*',
+        json:{
+            jx:1,
+            parse:1,
+        },
+    }],
     // 自定义免嗅
     lazy:'',
     // 首页推荐显示数量
     limit:6,
     double:true,//是否双层列表定位,默认false
+    // 对图片加了referer验证的有效,海阔专用,普通规则请勿填写此键值
+    图片来源:'@Referer=http://www.jianpianapp.com@User-Agent=jianpian-version350',
+    
     // 类似海阔一级 列表;标题;图片;描述;链接;详情 其中最后一个参数选填
     // 如果是双层定位的话,推荐的第2段分号代码也是第2层定位列表代码
     推荐:'.col-sm-6;h3&&Text;img&&data-src;.date&&Text;a&&href',
     // 类似海阔一级 列表;标题;图片;描述;链接;详情 其中最后一个参数选填
     一级:'.col-sm-6;h3&&Text;img&&data-src;.date&&Text;a&&href',
     // 二级可以是*,表示规则无二级,直接拿一级的链接进行嗅探
-    // 或者 {title:'',img:'',desc:'',content:'',tabs:'',lists:''} 同海阔dr二级
+    // 二级 title: 片名;类型
+    // 二级 desc: 主要信息;年代;地区;演员;导演
+    // 或者 {title:'',img:'',desc:'',content:'',tabs:'',lists:'',tab_text:'body&&Text',list_text:'body&&Text',list_url:'a&&href'} 同海阔dr二级
     二级:'*',
     // 搜索可以是*,集成一级，或者跟一级一样的写法 列表;标题;图片;描述;链接;详情
     搜索:'*',
@@ -356,7 +420,15 @@ host:'https://yanetflix.com',
 url:'/index.php/vod/show/id/fyclass/page/fypage.html',
 class_parse:'.navbar-items li:gt(1):lt(6);a&&Text;a&&href;.*/(.*?).html',
 });
-
+```
+模板继承写法(新)
+```javascript
+var rule = {
+title:'cokemv',
+模板:'mxpro',
+host:'https://cokemv.me',
+class_parse:'.navbar-items li:gt(1):lt(7);a&&Text;a&&href;/(\\d+).html',
+}
+```
 js:内置变量
 input,html,VODS,VOD,TABS,LISTS
-```

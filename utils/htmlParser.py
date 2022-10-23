@@ -6,6 +6,7 @@
 import json
 
 from pyquery import PyQuery as pq
+from lxml import etree
 from urllib.parse import urljoin
 import re
 from jsonpath import jsonpath
@@ -22,8 +23,12 @@ class jsoup:
     def pdfh(self,html,parse:str,add_url=False):
         if not parse:
             return ''
-
         doc = pq(html)
+        if parse == 'body&&Text' or parse == 'Text':
+            text = doc.text()
+            return text
+        elif parse == 'body&&Html' or parse == 'Html':
+            return doc.html()
         option = None
         if parse.find('&&') > -1:
             option = parse.split('&&')[-1]
@@ -53,12 +58,19 @@ class jsoup:
                         ret = re.search('url\((.*?)\)',ret,re.M|re.S).groups()[0]
                     except:
                         pass
-                if ret and add_url and option in ['url','src','href','data-original','data-src']:
-                    if 'http' in ret:
-                        ret = ret[ret.find('http'):]
-                    else:
-                        ret = urljoin(self.MY_URL,ret)
-                    # print(ret)
+
+                if ret and add_url:
+                    # pd_list = 'url|src|href|data-original|data-src|data-play|data-url'.split('|')
+                    # need_add = option in pd_list
+
+                    need_add = re.search('(url|src|href|-original|-src|-play|-url)$', option, re.M | re.I)
+                    # print(f'option:{option},need_add:{need_add}')
+                    if need_add:
+                        if 'http' in ret:
+                            ret = ret[ret.find('http'):]
+                        else:
+                            ret = urljoin(self.MY_URL,ret)
+                        # print(ret)
         else:
             # ret = doc(parse+':first')
             ret = doc(parse) # 由于是生成器,直接转str就能拿到第一条数据,不需要next
@@ -66,10 +78,14 @@ class jsoup:
             # ret = doc(parse) # 下面注释的写法不对的
             # ret = ret.find(':first')
             # ret = ret.children(':first')
-            ret = str(ret)
+            # print(parse)
+            # ret = str(ret)
+            ret = ret.outerHtml()
         return ret
 
     def pdfa(self,html,parse:str):
+        # 看官方文档才能解决这个问题!!!
+        # https://pyquery.readthedocs.io/en/latest/api.html
         if not parse:
             return []
         if parse.find('&&') > -1:
@@ -78,8 +94,16 @@ class jsoup:
             parse = ' '.join([parse[i] if self.test(':eq|:lt|:gt', parse[i]) or i>=len(parse)-1 else f'{parse[i]}:eq(0)' for i in range(len(parse))])
         # print(f'pdfa:{parse}')
         doc = pq(html)
-        res = [str(item) for item in doc(parse).items()]
+        result = doc(parse)
+        # 节点转字符串
+        # print(str(etree.tostring(result[0], pretty_print=True), 'utf-8'))
+        # res = [item for item in result.items()]
+        # print(res)
+        res = [item.outerHtml() for item in result.items()] #  这个才是对的！！str() item str(etree.tostring 统统错误
+        # res = [str(item) for item in result.items()]
+        # res = [str(etree.tostring(item, pretty_print=True), 'utf-8') for item in result]
         # print(len(res),res)
+        # print('pdfa执行结果数:',len(res))
         return res
 
     def pd(self,html,parse:str):

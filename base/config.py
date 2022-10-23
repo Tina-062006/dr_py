@@ -27,7 +27,8 @@ HTTP_PORT = '5705'
 PLAY_DISABLE = False  # 全局禁用播放解析
 LAZYPARSE_MODE = 1  # 播放解析模式(0 本地 1 局域网 2远程 仅在全局禁用为False的时候生效)
 WALL_PAPER_ENABLE = True  # 启用自定义壁纸
-WALL_PAPER = "https://picsum.photos/1280/720/?blur=10"  # 自定义壁纸,可注释
+# WALL_PAPER = "https://picsum.photos/1280/720/?blur=10"  # 自定义壁纸,可注释
+WALL_PAPER = "https://tuapi.eees.cc/api.php?category=fengjing&type=302"  # 自定义壁纸,可注释
 SUP_PORT = 9001  # supervisord 服务端口
 RETRY_CNT = 3 # 验证码重试次数
 # OCR_API = 'http://192.168.3.224:9000/api/ocr_img' # 验证码识别接口,传参数data
@@ -45,4 +46,5 @@ TAB_EXCLUDE = '猜你|喜欢|APP|下载|剧情|简介'  # 动态线路名过滤
 # {% if config.WALL_PAPER %}"wallpaper":"{{ config.WALL_PAPER }}",{% endif %}
 SEARCH_TIMEOUT = 5000 # 聚搜超时毫秒
 MULTI_MODE = 0  # 多源模式
+XR_MODE = 1  # 仙人模式
 ALI_TOKEN = '' # 适用于初始配置的阿里云token
