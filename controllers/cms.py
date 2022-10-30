@@ -133,7 +133,10 @@ class CMS:
             # print(play_url)
             if self.play_parse:
                 # self.play_url = play_url + self.vod + '?play_url='
-                self.play_url = f'{play_url}{self.vod}?rule={self.id}&ext={ext}&play_url='
+                js0_password = self.lsg.getItem('JS0_PASSWORD')
+                # print(f'js0密码:{js0_password}')
+                js0_password = f'pwd={js0_password}&' if js0_password else ''
+                self.play_url = f'{play_url}{self.vod}?{js0_password}rule={self.id}&ext={ext}&play_url='
                 # logger.info(f'cms重定向链接:{self.play_url}')
             else:
                 self.play_url = ''
@@ -1052,7 +1055,11 @@ class CMS:
                     vlists = loader.eval('LISTS')
                     if isinstance(vod, JsObjectWrapper):
                         vlists = vlists.to_list() # [['第1集$http://1.mp4','第2集$http://2.mp4'],['第3集$http://1.mp4','第4集$http://2.mp4']]
-
+                    for i in range(len(vlists)):
+                        try:
+                            vlists[i] = list(map(lambda x:'$'.join(x.split('$')[:2]),vlists[i]))
+                        except Exception as e:
+                            logger.info(f'LISTS格式化发生错误:{e}')
                     vod_play_url = vod_play_url.join(list(map(lambda x:'#'.join(x),vlists)))
                 else:
                     list_text = p.get('list_text','') or 'body&&Text'

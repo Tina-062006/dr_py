@@ -37,12 +37,13 @@ def admin_index():  # 管理员界面
     lsg = storage_service()
     live_url = lsg.getItem('LIVE_URL')
     use_py = lsg.getItem('USE_PY')
+    js0_password = lsg.getItem('JS0_PASSWORD')
     # print(f'live_url:', live_url)
     rules = getRules('js')
     # print(rules)
     cache_count = getCacheCount()
     # print(cache_count)
-    return render_template('admin.html', pystate=use_py,rules=rules,cache_count=cache_count, ver=getLocalVer(), live_url=live_url)
+    return render_template('admin.html',js0_password=js0_password, pystate=use_py,rules=rules,cache_count=cache_count, ver=getLocalVer(), live_url=live_url)
 
 @admin.route('/settings')
 def admin_settings():  # 管理员界面
@@ -139,6 +140,29 @@ def admin_rule_state(state=0):  # 管理员修改规则状态
     for rule in rule_list:
         try:
             res_id = rules.setState(rule,state)
+            success_list.append(f'{rule}:{res_id}')
+        except:
+            success_list.append(rule)
+
+    return R.success(f'修改成功,服务器反馈信息为:{success_list}')
+
+@admin.route('/rule_order/<int:order>',methods=['POST'])
+def admin_rule_order(order=0):  # 管理员修改规则顺序
+    if not verfy_token():
+        return R.error('请登录后再试')
+    names = getParmas('names')
+    if not names:
+        return R.success(f'修改失败,没有传递names参数')
+    rule_list = names.split(',')
+    rules = rules_service()
+    # print(rules.query_all())
+    # print(rules.getState(rule_list[0]))
+    # print(rule_list)
+    success_list = []
+    rule_list.reverse() # 倒序解决时间多重排序问题
+    for rule in rule_list:
+        try:
+            res_id = rules.setOrder(rule,order)
             success_list.append(f'{rule}:{res_id}')
         except:
             success_list.append(rule)

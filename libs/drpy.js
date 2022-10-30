@@ -32,8 +32,28 @@ function init_test(){
     console.log("init_test_end");
 }
 
+/**
+ * 执行预处理代码
+ */
+function pre(){
+    if(typeof(rule.预处理) === 'string' && rule.预处理 && rule.预处理.trim()){
+        let code = rule.预处理.trim();
+        console.log("执行预处理代码:"+code);
+        if(code.startsWith('js:')){
+            code = code.replace('js:','');
+        }
+        try {
+            // code里可以进行get 或者 post请求cookie并改变rule.headers 里的cookie
+            //  直接操作 rule_fetch_params 这个变量 .headers.Cookie
+            eval(code);
+        }catch (e) {
+            console.log('预处理执行失败:'+e.message);
+        }
+    }
+}
+
 let rule = {};
-const VERSION = '3.9.16';
+const VERSION = '3.9.18';
 /** 已知问题记录
  * 1.影魔的jinjia2引擎不支持 {{fl}}对象直接渲染 (有能力解决的话尽量解决下，支持对象直接渲染字符串转义,如果加了|safe就不转义)[影魔牛逼，最新的文件发现这问题已经解决了]
  * Array.prototype.append = Array.prototype.push; 这种js执行后有毛病,for in 循环列表会把属性给打印出来 (这个大毛病需要重点排除一下)
@@ -588,8 +608,11 @@ const parseTags = {
                 sp.splice(sp.length - 1);
                 if (sp.length > 1) {
                     for (let i in sp) {
-                        if (!SELECT_REGEX.test(sp[i])) {
-                            sp[i] = sp[i] + ':eq(0)';
+                        //Javascript自定义Array.prototype干扰for-in循环
+                        if(sp.hasOwnProperty(i)){
+                            if (!SELECT_REGEX.test(sp[i])) {
+                                sp[i] = sp[i] + ':eq(0)';
+                            }
                         }
                     }
                 } else {
@@ -639,10 +662,12 @@ const parseTags = {
             if (parse.indexOf('&&') > -1) {
                 let sp = parse.split('&&');
                 for (let i in sp) {
-                    if (!SELECT_REGEX_A.test(sp[i]) && i < sp.length - 1) {
-                        if(sp[i]!=='body'){
-                            // sp[i] = sp[i] + ':eq(0)';
-                            sp[i] = sp[i] + ':first';
+                    if(sp.hasOwnProperty(i)){
+                        if (!SELECT_REGEX_A.test(sp[i]) && i < sp.length - 1) {
+                            if(sp[i]!=='body'){
+                                // sp[i] = sp[i] + ':eq(0)';
+                                sp[i] = sp[i] + ':first';
+                            }
                         }
                     }
                 }
@@ -1709,16 +1734,31 @@ function detailParse(detailObj){
         if(p.lists){
             if(p.lists.startsWith('js:')){
                 print('开始执行lists代码:'+p.lists);
-                if(html&&typeof (html)!=='string'){
-                    // 假装是jq的对象拿来转换一下字符串,try为了防止json的情况报错
-                    try {
-                        html = html.rr(html.ele).toString();
-                    }catch (e) {}
+                try {
+                    if(html&&typeof (html)!=='string'){
+                        // 假装是jq的对象拿来转换一下字符串,try为了防止json的情况报错
+                        try {
+                            html = html.rr(html.ele).toString();
+                        }catch (e) {}
+                    }
+                    var input = MY_URL;
+                    var play_url = '';
+                    eval(p.lists.replace('js:',''));
+                    for(let i in LISTS){
+                        if(LISTS.hasOwnProperty(i)){
+                            // print(i);
+                            try {
+                                LISTS[i] = LISTS[i].map(it=>it.split('$').slice(0,2).join('$'));
+                            }catch (e) {
+                                print('格式化LISTS发生错误:'+e.message);
+                            }
+                        }
+                    }
+                    vod_play_url = LISTS.map(it=>it.join('#')).join(vod_play_url);
+                }catch (e) {
+                    print('js执行lists: 发生错误:'+e.message);
                 }
-                var input = MY_URL;
-                var play_url = '';
-                eval(p.lists.replace('js:',''));
-                vod_play_url = LISTS.map(it=>it.join('#')).join(vod_play_url);
+
             }else{
                 let list_text = p.list_text||'body&&Text';
                 let list_url = p.list_url||'a&&href';
@@ -1803,6 +1843,7 @@ function playParse(playObj){
     let common_play = {
         parse:1,
         url:input,
+        // url:urlencode(input),
         jx:tellIsJx(input)
     };
     let lazy_play;
@@ -1937,6 +1978,7 @@ function playParse(playObj){
         rule_fetch_params  = {'headers': rule.headers||false, 'timeout': rule.timeout, 'encoding': rule.encoding};
         oheaders = rule.headers||{};
         RKEY = typeof(key)!=='undefined'&&key?key:'drpy_' + (rule.title || rule.host);
+        pre(); // 预处理
         init_test();
     }catch (e) {
         console.log('init_test发生错误:'+e.message);

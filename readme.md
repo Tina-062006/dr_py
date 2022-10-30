@@ -40,13 +40,26 @@
 </a>
 
 [JS引擎的选择](./python最强js引擎.md)  
-[搭建教程](./安卓本地搭建说明.md) | [install_help](./安卓本地搭建说明.md)  |[goorm](./道长乱说.md) |[大佬地盘](./大佬友链.md) 
+[搭建教程](./安卓本地搭建说明.md) | [install_help](https://jason-ray.notion.site/jason-ray/Pluto-TVB-706da08332804a19ab012b4f8385df64)  |[goorm](./道长乱说.md) |[大佬地盘](./大佬友链.md)   
 [dr项目QQ官群](https://qm.qq.com/cgi-bin/qm/qr?k=H2KwcXrMdiR5M2blHR5gjZzPfN_S3N_C&jump_from=webapi)  
 [参考T4](https://github.com/sec-an/TV_Spider/blob/main/spider/sp360.py)  
 [golang最好的js引擎-otto](https://github.com/robertkrimen/otto)   
 [dockerfile教程](https://blog.csdn.net/qq_46158060/article/details/125718218)   
 [获取本地设备信息](https://blog.csdn.net/cui_yonghua/article/details/125508991)   
 [获取本地设备信息](https://m.jb51.net/article/140716.htm)
+###### 2022/10/30
+- [X] 3.9.18beta4 修复lives?path=接口漏洞,修复js0设置密码后播放解析没自动带密码Bug
+###### 2022/10/28
+- [X] 3.9.18beta1 未来功能排序优化,设置中心增加js0防盗用和禁用功能
+###### 2022/10/27
+- [X] v3.9.18 js1 增加 预处理:, 可以在预处理里写js代码实现操作rule变量和 rule_fetch_params 变量  
+比如 rule_fetch_params.headers.Cookie = 'xxxx'; 当然这个cookie是通过js代码获取到的
+###### 2022/10/25
+- [X] v3.9.17beta1 增加海盗听书源
+###### 2022/10/24
+- [X] v3.9.17
+- [X] drpy(道长) 服务端聚搜支持自动排除未来功能里隐藏的源  
+- [X] 未来功能增加源置顶和置底功能 测试性增加排序功能(指定输入数字)
 ###### 2022/10/23
 - [X] 新增几个源 包括虎牙直播
 - [X] 设置中心增加仙人模式开关(自动识别不同设备返回不同的drpy接口,关闭的话只会走drpy.min.js)
@@ -398,6 +411,9 @@ var rule = {
     // 对图片加了referer验证的有效,海阔专用,普通规则请勿填写此键值
     图片来源:'@Referer=http://www.jianpianapp.com@User-Agent=jianpian-version350',
     
+    // js写法，仅js模式1有效.可以用于代码动态获取全局cookie之类的
+    // 可操作变量有 rule_fetch_params,rule,以及基础的网页访问request,post等操作
+    预处理:'rule_fetch_params.headers.Cookie = "xxxx";',
     // 类似海阔一级 列表;标题;图片;描述;链接;详情 其中最后一个参数选填
     // 如果是双层定位的话,推荐的第2段分号代码也是第2层定位列表代码
     推荐:'.col-sm-6;h3&&Text;img&&data-src;.date&&Text;a&&href',
