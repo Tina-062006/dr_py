@@ -1,34 +1,12 @@
-// import 'https://gitcode.net/qq_32394351/dr_py/-/raw/master/libs/es6py.js';
-// import {是否正版,urlDeal,setResult,setResult2,setHomeResult,maoss,urlencode} from 'http://192.168.10.103:5705/libs/es6py.js';
-// import 'http://192.168.1.124:5705/libs/es6py.js';
 import cheerio from 'https://gitcode.net/qq_32394351/dr_py/-/raw/master/libs/cheerio.min.js';
-// import cheerio from 'http://192.168.10.103:5705/libs/cheerio.min.js';
 import 'https://gitcode.net/qq_32394351/dr_py/-/raw/master/libs/crypto-js.js';
-import 'https://gitcode.net/qq_32394351/dr_py/-/raw/master/libs/drT.js';
-// import 'http://192.168.10.103:5705/libs/drT.js';
-// import muban from 'https://gitcode.net/qq_32394351/dr_py/-/raw/master/js/模板.js';
-// import muban from 'http://192.168.10.103:5705/admin/view/模板.js';
 
-// const key = 'drpy_zbk';
-// eval(req('http://192.168.1.124:5705/libs/es6py.js').content);
 function init_test(){
     // console.log(typeof(CryptoJS));
     console.log("init_test_start");
     console.log("当前版本号:"+VERSION);
     console.log(RKEY);
     console.log(JSON.stringify(rule));
-    // console.log('123456的md5值是:'+md5('123456'));
-    // let aa = base64Encode('编码测试一下')
-    // log(aa);
-    // let bb = base64Decode(aa);
-    // log('bb:'+bb);
-    // clearItem(RULE_CK);
-    // console.log(JSON.stringify(rule));
-    // console.log(request('https://www.baidu.com',{withHeaders:true}));
-    // console.log(request('https://www.baidu.com/favicon.ico',{toBase64:true}));
-    // require('http://192.168.10.99:5705/txt/pluto/drT.js');
-    // console.log(typeof(drT));
-    // console.log(drT.renderText('{{fl.cate}},hi, {{fl}}哈哈.{{fl}}',{sort: 1,cate:'movie'},'fl'));
     console.log("init_test_end");
 }
 
@@ -53,7 +31,7 @@ function pre(){
 }
 
 let rule = {};
-const VERSION = '3.9.20beta7';
+const VERSION = 'drpy2 3.9.20beta7';
 /** 已知问题记录
  * 1.影魔的jinjia2引擎不支持 {{fl}}对象直接渲染 (有能力解决的话尽量解决下，支持对象直接渲染字符串转义,如果加了|safe就不转义)[影魔牛逼，最新的文件发现这问题已经解决了]
  * Array.prototype.append = Array.prototype.push; 这种js执行后有毛病,for in 循环列表会把属性给打印出来 (这个大毛病需要重点排除一下)
@@ -111,7 +89,7 @@ const SELECT_REGEX = /:eq|:lt|:gt|#/g;
 const SELECT_REGEX_A = /:eq|:lt|:gt/g;
 
 /**
-es6py扩展
+ es6py扩展
  */
 if (typeof Object.assign != 'function') {
     Object.assign = function () {
@@ -596,62 +574,52 @@ const parseTags = {
             if (!parse || !parse.trim()) {
                 return ''
             }
-            let eleFind = typeof html === 'object';
-            let option = undefined;
-            if (eleFind && parse.startsWith('body&&')) {
+            parse = parse.trim();
+            let option = '';
+            // print('pdfh parse前:'+parse);
+            if (parse.startsWith('body&&')) {
                 parse = parse.substr(6);
-                if (parse.indexOf('&&') < 0) {
-                    option = parse.trim();
-                    parse = '*=*';
-                }
             }
-            if (parse.indexOf('&&') > -1) {
+            if (parse.includes('&&')) {
                 let sp = parse.split('&&');
                 option = sp[sp.length - 1];
                 sp.splice(sp.length - 1);
-                if (sp.length > 1) {
-                    for (let i in sp) {
-                        //Javascript自定义Array.prototype干扰for-in循环
-                        if(sp.hasOwnProperty(i)){
-                            if (!SELECT_REGEX.test(sp[i])) {
-                                sp[i] = sp[i] + ':eq(0)';
-                            }
-                        }
+                sp.forEach((it,idex)=>{
+                    if (!SELECT_REGEX.test(it)) {
+                        sp[idex] = it+':eq(0)';
                     }
-                } else {
-                    if (!SELECT_REGEX.test(sp[0])) {
-                        sp[0] = sp[0] + ':eq(0)';
-                    }
-                }
-                parse = sp.join(' ');
+                });
+                parse = sp.join(' ').trim();
             }
-            let result = '';
-            const $ = eleFind ? html.rr : cheerio.load(html);
-            let ret = eleFind ? ((parse === '*=*' || $(html.ele).is(parse)) ? html.ele : $(html.ele).find(parse)) : $(parse);
-            if (option) {
-                if (option === 'Text') {
-                    result = $(ret).text();
+            if(parse === 'Text'){
+                parse = 'body';
+                option = 'Text';
+            }else if(parse === 'Html'){
+                parse = 'body';
+                option = 'Html';
+            }
+            // print('pdfh parse后:'+parse+',option:'+option);
+            let result = defaultParser.pdfh(html,parse + " " + option);
+            // let result='';
+            // try {
+            //     result = defaultParser.pdfh(html,parse + " " + option);
+            // }catch (e) {
+            //     print('xxxxxxxxxxx');
+            //     print('pdfh发生了错误');
+            // }
+            if(option&&/style/.test(option.toLowerCase())&&/url\(/.test(result)){
+                try {
+                    result =  result.match(/url\((.*?)\)/)[1];
+                    // print(result);
+                }catch (e) {}
+            }
+            if (result && base_url && option && DOM_CHECK_ATTR.test(option)) {
+                if (/http/.test(result)) {
+                    result = result.substr(result.indexOf('http'));
+                } else {
+                    result = urljoin(base_url, result)
                 }
-                else if (option === 'Html') {
-                    result = $(ret).html();
-                }
-                else {
-                    result = $(ret).attr(option);
-                    if(/style/.test(option.toLowerCase())&&/url\(/.test(result)){
-                        try {
-                            result =  result.match(/url\((.*?)\)/)[1];
-                        }catch (e) {}
-                    }
-                }
-                if (result && base_url && DOM_CHECK_ATTR.test(option)) {
-                    if (/http/.test(result)) {
-                        result = result.substr(result.indexOf('http'));
-                    } else {
-                        result = urljoin(base_url, result)
-                    }
-                }
-            } else {
-                result = $(ret).toString();
+                // print(result);
             }
             return result;
         },
@@ -660,34 +628,27 @@ const parseTags = {
                 print('!parse');
                 return [];
             }
-            let eleFind = typeof html === 'object';
-            // print('parse前:'+parse);
-            if (parse.indexOf('&&') > -1) {
+            parse = parse.trim();
+            // print('pdfa=>parse前:'+parse);
+            if (parse.startsWith('body&&')) {
+                parse = parse.substr(6);
+            }
+            if (parse.includes('&&')) {
                 let sp = parse.split('&&');
-                for (let i in sp) {
-                    if(sp.hasOwnProperty(i)){
-                        if (!SELECT_REGEX_A.test(sp[i]) && i < sp.length - 1) {
-                            if(sp[i]!=='body'){
-                                // sp[i] = sp[i] + ':eq(0)';
-                                sp[i] = sp[i] + ':first';
-                            }
-                        }
+                sp.forEach((it,idex)=>{
+                    if (!SELECT_REGEX_A.test(it) && idex < sp.length - 1) {
+                        sp[idex] = it+':eq(0)';
                     }
-                }
-                parse = sp.join(' ');
-            }
-            // print('parse后:'+parse);
-            const $ = eleFind ? html.rr : cheerio.load(html);
-            let ret = eleFind ? ($(html.ele).is(parse) ? html.ele : $(html.ele).find(parse)) : $(parse);
-            let result = [];
-            // print('outerHTML:');
-            // print($(ret[0]).prop("outerHTML"));
-            if (ret) {
-                ret.each(function (idx, ele) {
-                    result.push({ rr: $, ele: ele });
-                    // result.push({ rr: $, ele: $(ele).prop("outerHTML")}); // 性能贼差
                 });
+                parse = sp.join(' ').trim();
             }
+            // if(!/&&| /.test(parse)){ // 自动补body就是jsoup的无稽之谈
+            //     parse = 'body '+parse;
+            // }
+            // print('pdfa=>parse后:'+parse);
+            let result = defaultParser.pdfa(html,parse);
+            // print(result);
+            print(`pdfa解析${parse}=>${result.length}`);
             return result;
         },
         pd(html,parse,uri){
@@ -1238,7 +1199,7 @@ function homeVodParse(homeVodObj){
                             // print(vod);
                             d.push(vod);
                         } catch (e) {
-                            console.log('首页列表处理发生错误:'+e.message);
+                            console.log('首页列表双层定位处理发生错误:'+e.message);
                         }
 
                     }
@@ -1290,7 +1251,7 @@ function homeVodParse(homeVodObj){
                         d.push(vod);
 
                     } catch (e) {
-
+                        console.log('首页列表单层定位处理发生错误:'+e.message);
                     }
 
                 }
@@ -1359,9 +1320,6 @@ function categoryParse(cateObj) {
         let new_url;
         new_url = cheerio.jinja2(url,{fl:fl});
         // console.log('jinjia2执行后的new_url类型为:'+typeof(new_url));
-        if(/object Object/.test(new_url)){
-            new_url = drT.renderText(url,fl);
-        }
         url = new_url;
     }
     if(/fypage/.test(url)){
@@ -1639,7 +1597,6 @@ function detailParse(detailObj){
             html = getHtml(MY_URL);
         }
         print(`二级${MY_URL}仅获取源码耗时:${(new Date()).getTime()-tt1}毫秒`);
-        let _impJQP = false;
         let _ps;
         if(p.is_json){
             print('二级是json');
@@ -1656,16 +1613,6 @@ function detailParse(detailObj){
             _ps = parseTags.jq;
             // print('二级默认jsp');
             // _ps = parseTags.jsp;
-        }
-        if(_ps === parseTags.jq){ // jquery解析提前load(html)
-            _impJQP = true;
-        }
-        if (_impJQP) {
-            let ttt1 = (new Date()).getTime();
-            let c$ = cheerio.load(html);
-            // print(`二级${MY_URL}仅c$源码耗时:${(new Date()).getTime()-ttt1}毫秒`);
-            html = { rr: c$, ele: c$('html')[0] };
-            print(`二级${MY_URL}仅cheerio.load源码耗时:${(new Date()).getTime()-ttt1}毫秒`);
         }
         let tt2 = (new Date()).getTime();
         print(`二级${MY_URL}获取并装载源码耗时:${tt2-tt1}毫秒`);
@@ -1712,21 +1659,12 @@ function detailParse(detailObj){
         if(p.重定向&&p.重定向.startsWith('js:')){
             print('开始执行重定向代码:'+p.重定向);
             html = eval(p.重定向.replace('js:',''));
-            if (_impJQP) {
-                let c$ = cheerio.load(html);
-                html = { rr: c$, ele: c$('html')[0] }
-            }
         }
-        
+
 // console.log(2);
         if(p.tabs){
             if(p.tabs.startsWith('js:')){
                 print('开始执行tabs代码:'+p.tabs);
-                if(html&&_impJQP&&typeof (html)!=='string'){
-                    try { // 假装是jq的对象拿来转换一下字符串,try为了防止json的情况报错
-                        html = html.rr(html.ele).toString();
-                    }catch (e) {}
-                }
                 var input = MY_URL;
                 eval(p.tabs.replace('js:',''));
                 playFrom = TABS;
@@ -1759,12 +1697,6 @@ function detailParse(detailObj){
             if(p.lists.startsWith('js:')){
                 print('开始执行lists代码:'+p.lists);
                 try {
-                    if(html&&_impJQP&&typeof (html)!=='string'){
-                        // 假装是jq的对象拿来转换一下字符串,try为了防止json的情况报错
-                        try {
-                            html = html.rr(html.ele).toString();
-                        }catch (e) {}
-                    }
                     var input = MY_URL;
                     var play_url = '';
                     eval(p.lists.replace('js:',''));
@@ -1939,7 +1871,7 @@ function playParse(playObj){
  * js源预处理特定返回对象中的函数
  * @param ext
  */
- function init(ext) {
+function init(ext) {
     console.log('init');
     try {
         // make shared jsContext happy muban不能import,不然会造成换源继承后变量被篡改
@@ -1958,7 +1890,7 @@ function playParse(playObj){
                 if (js){
                     eval(js.replace('var rule', 'rule'));
                 }
-                }
+            }
         } else {
             eval(ext.replace('var rule', 'rule'));
         }
