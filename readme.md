@@ -43,10 +43,19 @@
 [搭建教程](./安卓本地搭建说明.md) | [install_help](https://jason-ray.notion.site/jason-ray/Pluto-TVB-706da08332804a19ab012b4f8385df64)  |[goorm](./道长乱说.md) |[大佬地盘](./大佬友链.md)   
 [dr项目QQ官群](https://qm.qq.com/cgi-bin/qm/qr?k=H2KwcXrMdiR5M2blHR5gjZzPfN_S3N_C&jump_from=webapi)  
 [参考T4](https://github.com/sec-an/TV_Spider/blob/main/spider/sp360.py)  
+[drpy相关视频教程](https://www.youtube.com/watch?v=AK7cN-fcwm4&t=3s)  
 [golang最好的js引擎-otto](https://github.com/robertkrimen/otto)   
 [dockerfile教程](https://blog.csdn.net/qq_46158060/article/details/125718218)   
 [获取本地设备信息](https://blog.csdn.net/cui_yonghua/article/details/125508991)   
 [获取本地设备信息](https://m.jb51.net/article/140716.htm)
+###### 2022/11/20
+- [X] 维护一波可用的自建解析
+- [X] 未来功能-解析管理中心增加了对解析的点击访问测试
+- [X] 升级至3.9.21beta2
+###### 2022/11/17
+- [X] 海盗听书js0播放bug修复
+- [X] 升级至 3.9.21
+- [X] 设置中心增加源代理,提高js1搜索速度
 ###### 2022/11/08
 - [X] 海盗听书js0空白是触发了网页的cloudfare5秒盾了,暂时无解
 - [X] 3.9.20beta7 修复豆瓣
