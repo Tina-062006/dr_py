@@ -5,10 +5,11 @@
 # Date  : 2022/9/6
 import json
 
-from flask import Blueprint,abort,request,render_template,jsonify,make_response,redirect
+from flask import Blueprint,abort,request,render_template,render_template_string,jsonify,make_response,redirect,current_app
 from time import time
 from utils.web import getParmas,get_interval
 from utils.cfg import cfg
+from utils.env import get_env
 from js.rules import getRuleLists,getJxs
 from base.R import R
 from utils.log import logger
@@ -45,7 +46,7 @@ def search_one_py(rule, wd, before: str = ''):
         print(f'{rule}发生错误:{e}')
         return None
 
-def search_one(rule, wd, before: str = ''):
+def search_one(rule, wd, before: str = '',env:dict=None,app=None):
     t1 = time()
     if not before:
         with open('js/模板.js', encoding='utf-8') as f:
@@ -56,6 +57,16 @@ def search_one(rule, wd, before: str = ''):
     try:
         with open(js_path, encoding='utf-8') as f2:
             jscode = f2.read()
+        if env:
+            # 渲染字符串文本 render_template_string 必须带 flask的上下文
+            with app.app_context():
+                for k in env:
+                    # print(f'${k}', f'{env[k]}')
+                    if f'${k}' in jscode:
+                        jscode = jscode.replace(f'${k}', f'{env[k]}')
+                # jscode = render_template_string(jscode, **env)
+            # if '007' in rule:
+            #     print(rule,jscode)
         jscode = before + jscode + end_code
         # print(jscode)
         ctx.eval(jscode)
@@ -135,8 +146,14 @@ def merged_hide(merged_rules):
     logger.info(f'数据库筛选隐藏规则耗时{get_interval(t1)}毫秒,共计{all_cnt}条规则,隐藏后可渲染{len(merged_rules)}条规则')
     return merged_rules
 
+def disable_exit_for_threadpool_executor():
+    import atexit
+    import concurrent.futures
+    atexit.unregister(concurrent.futures.thread._python_exit)
+
 def multi_search(wd):
     lsg = storage_service()
+    env = get_env()
     t1 = time()
     try:
         timeout = round(int(lsg.getItem('SEARCH_TIMEOUT',5000))/1000,2)
@@ -163,7 +180,7 @@ def multi_search(wd):
         with ThreadPoolExecutor(max_workers=len(search_sites)) as executor:
             to_do = []
             for site in search_sites:
-                future = executor.submit(search_one, site, wd, before)
+                future = executor.submit(search_one, site, wd, before,env,current_app._get_current_object())
                 to_do.append(future)
             try:
                 for future in as_completed(to_do, timeout=timeout):  # 并发执行
@@ -176,6 +193,8 @@ def multi_search(wd):
                 import atexit
                 atexit.unregister(thread._python_exit)
                 executor.shutdown = lambda wait: None
+
+                # disable_exit_for_threadpool_executor()
     logger.info(f'drpy聚搜{len(search_sites)}个源共计耗时{get_interval(t1)}毫秒')
     return jsonify({
         "list": res
@@ -237,6 +256,15 @@ def vod_home():
     try:
         with open(js_path,encoding='utf-8') as f2:
             jscode = f2.read()
+        env = get_env()
+        for k in env:
+            # print(f'${k}',f'{env[k]}')
+            if f'${k}' in jscode:
+                jscode = jscode.replace(f'${k}',f'{env[k]}')
+        # print(env)
+        # if env:
+        #     jscode = render_template_string(jscode,**env)
+        # print(jscode)
         jscode = before + jscode + end_code
         # print(jscode)
         ctx.eval(jscode)
@@ -315,7 +343,7 @@ def vod_home():
         return jsonify(data)
     if wd: # 搜索
         if rule == 'drpy':
-            # print(f'准备单独处理聚合搜索:{wd}')
+            print(f'准备单独处理聚合搜索:{wd}')
             return multi_search(wd)
             # return multi_search2(wd)
         else:

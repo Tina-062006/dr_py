@@ -11,11 +11,15 @@ import time
 import base64
 
 
-class Spider(Spider):  # 元类 默认的元类 type
+class Spider(Spider):
+    def getDependence(self):
+        return ['py_bilibili']
+
     def getName(self):
         return "哔哩影视"
 
     def init(self, extend=""):
+        self.bilibili = extend[0]
         print("============{0}============".format(extend))
         pass
 
@@ -25,6 +29,7 @@ class Spider(Spider):  # 元类 默认的元类 type
     def manualVideoCheck(self):
         pass
 
+    # 主页
     def homeContent(self, filter):
         result = {}
         cateManual = {
@@ -38,6 +43,8 @@ class Spider(Spider):  # 元类 默认的元类 type
             "追番": "追番",
             "追剧": "追剧",
             "时间表": "时间表",
+            # ————————以下可自定义关键字，结果以影视类搜索展示————————
+            # "喜羊羊": "喜羊羊"
 
         }
         classes = []
@@ -51,32 +58,14 @@ class Spider(Spider):  # 元类 默认的元类 type
             result['filters'] = self.config['filter']
         return result
 
+    # 用户cookies
     cookies = ''
     userid = ''
 
     def getCookie(self):
-        # --------↓↓↓↓↓↓↓------在下方cookies_str后的双引号内填写-------↓↓↓↓↓↓↓--------
-        cookies_str = ""
-        if cookies_str:
-            cookies = dict([co.strip().split('=', 1) for co in cookies_str.split(';')])
-            bili_jct = cookies['bili_jct']
-            SESSDATA = cookies['SESSDATA']
-            DedeUserID = cookies['DedeUserID']
-            cookies_jar = {"bili_jct": bili_jct,
-                           'SESSDATA': SESSDATA,
-                           'DedeUserID': DedeUserID
-                           }
-            rsp = session()
-            rsp.cookies = cookies_jar
-            content = self.fetch("https://api.bilibili.com/x/web-interface/nav", cookies=rsp.cookies)
-            res = json.loads(content.text)
-            if res["code"] == 0:
-                self.cookies = rsp.cookies
-                self.userid = res["data"].get('mid')
-                return rsp.cookies
-        rsp = self.fetch("https://www.bilibili.com/")
-        self.cookies = rsp.cookies
-        return rsp.cookies
+        self.cookies = self.bilibili.getCookie()
+        self.userid = self.bilibili.userid
+        return self.cookies
 
     # 将超过10000的数字换成成以万和亿为单位
     def zh(self, num):
@@ -185,7 +174,7 @@ class Spider(Spider):  # 元类 默认的元类 type
         result = {}
         if len(self.cookies) <= 0:
             self.getCookie()
-        url = 'https://api.bilibili.com/pgc/season/index/result?order={2}&pagesize=20&type=1&season_type={0}&page={1}&season_status={3}'.format(tid, pg, order, season_status)
+        url = 'https://api.bilibili.com/pgc/season/index/result?order={2}&pagesize=10&type=1&season_type={0}&page={1}&season_status={3}'.format(tid, pg, order, season_status)
         rsp = self.fetch(url, cookies=self.cookies)
         content = rsp.text
         jo = json.loads(content)
@@ -324,10 +313,10 @@ class Spider(Spider):  # 元类 默认的元类 type
         ja = jo['episodes']
         playUrl = ''
         for tmpJo in ja:
-            eid = tmpJo['id']
+            aid = tmpJo['aid']
             cid = tmpJo['cid']
             part = tmpJo['title'].replace("#", "-")
-            playUrl = playUrl + '{0}${1}_{2}#'.format(part, eid, cid)
+            playUrl = playUrl + '{0}${1}_{2}#'.format(part, aid, cid)
 
         vod['vod_play_from'] = 'B站'
         vod['vod_play_url'] = playUrl
@@ -384,9 +373,10 @@ class Spider(Spider):  # 元类 默认的元类 type
             "Referer": "https://www.bilibili.com",
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36"
         }
-        url = 'https://api.bilibili.com/pgc/player/web/playurl?qn=116&ep_id={0}&cid={1}'.format(ids[0], ids[1])
+        url = 'https://api.bilibili.com/pgc/player/web/playurl?qn=116&aid={0}&cid={1}'.format(ids[0], ids[1])
         if len(self.cookies) <= 0:
             self.getCookie()
+        self.bilibili.post_history(ids[0], ids[1])  # 回传播放历史记录
         rsp = self.fetch(url, cookies=self.cookies, headers=header)
         jRoot = json.loads(rsp.text)
         if jRoot['message'] != 'success':

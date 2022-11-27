@@ -14,7 +14,7 @@ from controllers.classes import getClasses,getClassInfo
 
 from utils.files import getPics,custom_merge,getAlist,get_live_url,get_multi_rules,getCustonDict
 from js.rules import getRules,getPys
-from utils.encode import parseText,base64Encode,baseDecode
+from utils.encode import parseText,base64Encode,base64Decode
 from base.R import R
 from utils.system import getHost,is_linux
 from utils.cfg import cfg
@@ -168,7 +168,7 @@ def get_lives():
         live_text = f.read()
     if len(live_text) > 100 and live_text.find('http') < 0:
         try:
-            live_text = baseDecode(live_text)
+            live_text = base64Decode(live_text)
             logger.info(f'{path} base64解码完毕')
         except:
             pass
@@ -193,7 +193,9 @@ def get_liveslib():
 
 @home.route('/hotsugg')
 def get_hot_search():
-    data = getHotSuggest()
+    s_from = getParmas('from')
+    size = getParmas('size')
+    data = getHotSuggest(s_from,size)
     return R.success('获取成功',data)
 
 def merged_hide(merged_config):
@@ -262,13 +264,16 @@ def config_render(mode):
     # print(parses)
     merged_config['parses'] = parses
     config_text = json.dumps(merged_config,ensure_ascii=False,indent=1)
-    if js_proxy:
-        # print('js_proxy:',js_proxy)
-        if '=>' in js_proxy:
-            oldsrc = js_proxy.split('=>')[0]
-            newsrc = js_proxy.split('=>')[1]
-            print(f'js1源代理已启用,全局替换{oldsrc}为{newsrc}')
-            config_text = config_text.replace(oldsrc,newsrc)
+
+    # 依赖代理逻辑修改,改为admin/view去动态代理
+    # if js_proxy:
+    #     # print('js_proxy:',js_proxy)
+    #     if '=>' in js_proxy:
+    #         oldsrc = js_proxy.split('=>')[0]
+    #         newsrc = js_proxy.split('=>')[1]
+    #         print(f'js1源代理已启用,全局替换{oldsrc}为{newsrc}')
+    #         config_text = config_text.replace(oldsrc,newsrc)
+
     response = make_response(config_text)
     # response = make_response(str(merged_config))
     response.headers['Content-Type'] = 'application/json; charset=utf-8'

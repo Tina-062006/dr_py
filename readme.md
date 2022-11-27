@@ -40,6 +40,7 @@
 </a>
 
 [JS引擎的选择](./python最强js引擎.md)  
+[我的豆瓣](./static/img/豆瓣.png)  
 [搭建教程](./安卓本地搭建说明.md) | [install_help](https://jason-ray.notion.site/jason-ray/Pluto-TVB-706da08332804a19ab012b4f8385df64)  |[goorm](./道长乱说.md) |[大佬地盘](./大佬友链.md)   
 [dr项目QQ官群](https://qm.qq.com/cgi-bin/qm/qr?k=H2KwcXrMdiR5M2blHR5gjZzPfN_S3N_C&jump_from=webapi)  
 [参考T4](https://github.com/sec-an/TV_Spider/blob/main/spider/sp360.py)  
@@ -48,6 +49,40 @@
 [dockerfile教程](https://blog.csdn.net/qq_46158060/article/details/125718218)   
 [获取本地设备信息](https://blog.csdn.net/cui_yonghua/article/details/125508991)   
 [获取本地设备信息](https://m.jb51.net/article/140716.htm)
+###### 2022/11/27
+- [X] 修复alist含字幕视频无法播放问题以及dsf文件无法显示问题
+- [X] drpy系列接口增加首页推荐和一级分类前两条数据打印
+- [X] drpy系列接口增加二级自动重命名同名线路(参考乐猪)
+- [X] V3.9.26重大升级,修复源代理导致的筛选失效问题。环境变量格式已修改,不再是{{douban}},而是$douban
+###### 2022/11/26
+- [X] drpy系列资源接口修复,推荐为double的情况也支持第二个定位写*自动继承一级的第一个定位(参考乐猪TV)
+- [X] V3.9.25新特性:搜索支持post(参考乐猪TV) 格式为 搜索链接;post (搜索参数用#传递)
+- [X] V3.9.25beta1 增加部分源二级选集列表强制正序
+###### 2022/11/25
+- [X] 优化腾云驾雾源,方便追剧
+- [X] 增加新解析并修复酷云自建解析
+- [X] 修复py版厂长资源
+###### 2022/11/24
+- [X] 优化alist的历史记录和收藏
+- [X] 设置中心环境变量增加前端的保存校验
+- [X] 修改pluto默认搜索推荐接口为腾讯(可自定义更换链接,参数有from=sougou&size=50,默认是from=tx&size=50)
+###### 2022/11/23
+- [X] 优化alist的名称排序算法
+###### 2022/11/22
+- [X] 增加了alist的api,版本号升级至 3.9.23
+- [X] 支持alist搜索小雅的结构,配置里加 "search": true, 仅取前面第一个alist
+- [X] alist搜索支持限制搜索结果数,默认取前200. "ext":"{{host}}/txt/json/alist.json;200;video" 这种格式,分号隔开传参数
+- [X] 需要在custom.conf加一行自定义配置,例如:
+```json
+{"key":"Alist","name":"Alist","type":3,"api":"{{host}}/libs/alist.min.js","searchable":2,"quickSearch":0,"filterable":0,"ext":"{{host}}/txt/json/alist.json;200;video"},
+```
+###### 2022/11/21
+- [X] 重新定义依赖代理逻辑
+- [X] 设置中心增加自定义环境变量,演示源:007影视.js
+- [X] 界面优化，升级至3.9.22
+- [X] 修复自建鸿途解析
+- [X] 增加我的豆瓣配置,环境变量为 douban 例如 {"douban":"自己的豆瓣id"}
+- [X] 增加新源by海王
 ###### 2022/11/20
 - [X] 维护一波可用的自建解析
 - [X] 未来功能-解析管理中心增加了对解析的点击访问测试

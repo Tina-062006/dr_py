@@ -14,8 +14,8 @@ from utils.web import *
 from utils.system import getHost
 from utils.config import playerConfig
 from utils.log import logger
-from utils.encode import base64Encode,baseDecode,fetch,post,request,getCryptoJS,getPreJs,buildUrl,getHome
-from utils.encode import verifyCode,setDetail,join,urljoin2,parseText,requireCache
+from utils.encode import base64Encode,base64Decode,fetch,post,request,getCryptoJS,getPreJs,buildUrl,getHome
+from utils.encode import verifyCode,setDetail,join,urljoin2,parseText,requireCache,forceOrder
 from utils.encode import md5 as mmd5
 from utils.safePython import safePython
 from utils.parser import runPy,runJScode,JsObjectWrapper,PyJsObject,PyJsString
@@ -74,7 +74,7 @@ def md5(text):
     return mmd5(text)
 
 py_ctx = {
-'requests':requests,'print':print,'base64Encode':base64Encode,'baseDecode':baseDecode,
+'requests':requests,'print':print,'base64Encode':base64Encode,'base64Decode':base64Decode,
 'log':logger.info,'fetch':fetch,'post':post,'request':request,'getCryptoJS':getCryptoJS,
 'buildUrl':buildUrl,'getHome':getHome,'setDetail':setDetail,'join':join,'urljoin2':urljoin2,
 'PC_UA':PC_UA,'MOBILE_UA':MOBILE_UA,'UC_UA':UC_UA,'UA':UA,'IOS_UA':IOS_UA,
@@ -572,8 +572,11 @@ class CMS:
             jsp = jsoup(self.homeUrl)
             pp = self.一级.split(';')
             def getPP(p,pn,pp,ppn):
-                ps = pp[ppn] if p[pn] == '*' and len(pp) > ppn else p[pn]
-                return ps
+                try:
+                    ps = pp[ppn] if p[pn] == '*' and len(pp) > ppn else p[pn]
+                    return ps
+                except Exception as e:
+                    return ''
             p0 = getPP(p,0,pp,0)
             is_json = str(p0).startswith('json:')
             if is_json:
@@ -582,8 +585,6 @@ class CMS:
             pdfa = jsp.pjfa if is_json else jsp.pdfa
             pd = jsp.pj if is_json else jsp.pd
 
-
-
             # print(html)
             try:
                 if self.double:
@@ -591,29 +592,30 @@ class CMS:
                     # print(p[0])
                     # print(items)
                     # print(len(items))
+                    p1 = getPP(p, 1, pp, 0)
+                    p2 = getPP(p, 2, pp, 1)
+                    p3 = getPP(p, 3, pp, 2)
+                    p4 = getPP(p, 4, pp, 3)
+                    p5 = getPP(p, 5, pp, 4)
+                    p6 = getPP(p, 6, pp, 5)
                     for item in items:
-                        items2 = pdfa(item,p[1])
+                        items2 = pdfa(item,p1)
                         # print(len(items2))
                         for item2 in items2:
                             try:
-                                p2 = getPP(p,2,pp,1)
                                 title = pdfh(item2, p2)
                                 # print(title)
                                 try:
-                                    p3 = getPP(p,3,pp,2)
                                     img = pd(item2, p3)
                                 except:
                                     img = ''
                                 try:
-                                    p4 = getPP(p,4,pp,3)
                                     desc = pdfh(item2, p4)
                                 except:
                                     desc = ''
-                                p5 = getPP(p,5,pp,4)
                                 links = [pd(item2, _p5) if not self.detailUrl else pdfh(item2, _p5) for _p5 in p5.split('+')]
                                 vid = '$'.join(links)
                                 if len(p) > 6 and p[6]:
-                                    p6 = getPP(p,6,pp,5)
                                     content = pdfh(item2, p6)
                                 else:
                                     content = ''
@@ -635,26 +637,27 @@ class CMS:
                 else:
                     items = pdfa(html, p0.replace('json:',''))
                     # print(items)
+                    p1 = getPP(p, 1, pp, 1)
+                    p2 = getPP(p, 2, pp, 2)
+                    p3 = getPP(p, 3, pp, 3)
+                    p4 = getPP(p, 4, pp, 4)
+                    p5 = getPP(p, 5, pp, 5)
+
                     for item in items:
                         try:
-                            p1 = getPP(p,1,pp,1)
                             title = pdfh(item, p1)
                             try:
-                                p2 = getPP(p,2,pp,2)
                                 img = pd(item, p2)
                             except:
                                 img = ''
                             try:
-                                p3 = getPP(p,3,pp,3)
                                 desc = pdfh(item, p3)
                             except:
                                 desc = ''
-                            p4 = getPP(p,4,pp,4)
                             # link = pd(item, p[4])
                             links = [pd(item, _p5) if not self.detailUrl else pdfh(item, _p5) for _p5 in p4.split('+')]
                             vid = '$'.join(links)
                             if len(p) > 5 and p[5]:
-                                p5 = getPP(p,5,pp,5)
                                 content = pdfh(item, p5)
                             else:
                                 content = ''
@@ -707,6 +710,7 @@ class CMS:
 
         if fl is None:
             fl = {}
+        # print(f'fl:{fl}')
         if self.filter_def and isinstance(self.filter_def,dict):
             try:
                 if self.filter_def.get(fyclass) and isinstance(self.filter_def[fyclass],dict):
@@ -737,8 +741,8 @@ class CMS:
                 url += self.filter_url
             else: # 第二种情况直接替换关键字为待拼接的结果后面渲染,适用于 ----fypage.html的情况
                 url = url.replace('fyfilter', self.filter_url)
+            # print(f'url渲染:{url}')
             url = render_template_string(url,fl=fl)
-
             # fl_url = render_template_string(self.filter_url,fl=fl)
             # if not 'fyfilter' in url: # 第一种情况,默认不写fyfilter关键字,视为直接拼接在链接后面当参数
             #     if not url.endswith('&') and not fl_url.startswith('&'):
@@ -1036,7 +1040,14 @@ class CMS:
 
             # print(vodHeader)
             # print(vod)
+            new_map = {}
             for v in vodHeader:
+                if not v in new_map:
+                    new_map[v] = 1
+                else:
+                    new_map[v] += 1
+                if new_map[v] > 1:
+                    v = f'{v}{new_map[v]-1}'
                 playFrom.append(v)
             vod_play_from = vod_play_from.join(playFrom)
 
@@ -1088,7 +1099,12 @@ class CMS:
                             vodList = [(pdfh(html, tab_ext) if tab_ext else tab_name) + '$' + play_url + i for i in
                                        vodList] if is_json else \
                                 [pdfh(i,list_text) + '$' + play_url + pd(i, list_url) for i in vodList]  # 拼接成 名称$链接
+
+                        # print(vodList)
+                        vodList = forceOrder(vodList,option=lambda x:x.split('$')[0])
+                        # print(vodList)
                         vlist = '#'.join(vodList)  # 拼多个选集
+                        # print(vlist)
                         vod_tab_list.append(vlist)
                     vod_play_url = vod_play_url.join(vod_tab_list)
 
@@ -1218,8 +1234,11 @@ class CMS:
         is_js = isinstance(p, str) and str(p).startswith('js:')  # 是js
 
         def getPP(p, pn, pp, ppn):
-            ps = pp[ppn] if p[pn] == '*' and len(pp) > ppn else p[pn]
-            return ps
+            try:
+                ps = pp[ppn] if p[pn] == '*' and len(pp) > ppn else p[pn]
+                return ps
+            except:
+                return ''
         if is_js:
             headers['Referer'] = getHome(url)
             py_ctx.update({
@@ -1257,7 +1276,35 @@ class CMS:
             pd = jsp.pj if is_json else jsp.pd
             pq = jsp.pq
             try:
-                r = requests.get(url, headers=self.headers,timeout=self.timeout,verify=False)
+                req_method = url.split(';')[1].lower() if len(url.split(';'))>1 else 'get'
+                if req_method == 'post':
+                    rurls = url.split(';')[0].split('#')
+                    rurl = rurls[0]
+                    params = rurls[1] if len(rurls)>1 else ''
+                    # params = quote(params)
+                    print(f'rurl:{rurl},params:{params}')
+                    new_dict = {}
+                    new_tmp = params.split('&')
+                    # print(new_tmp)
+                    for i in new_tmp:
+                        new_dict[i.split('=')[0]] = i.split('=')[1]
+                    # data = ujson.dumps(new_dict)
+                    data = new_dict
+                    # print(data)
+                    r = requests.post(rurl, headers=self.headers,data=data, timeout=self.timeout, verify=False)
+                elif req_method == 'postjson':
+                    rurls = url.split(';')[0].split('#')
+                    rurl = rurls[0]
+                    params = rurls[1] if len(rurls) > 1 else '{}'
+                    headers_cp = self.headers.copy()
+                    headers_cp.update({'Content-Type':'application/json'})
+                    try:
+                        params = ujson.dumps(params)
+                    except:
+                        params = '{}'
+                    r = requests.post(rurl, headers=headers_cp, data=params, timeout=self.timeout, verify=False)
+                else:
+                    r = requests.get(url, headers=self.headers,timeout=self.timeout,verify=False)
                 html = self.checkHtml(r)
                 if is_json:
                     html = self.dealJson(html)
@@ -1284,29 +1331,30 @@ class CMS:
                 items = pdfa(html,p0.replace('json:','',1))
                 # print(len(items),items)
                 videos = []
+                p1 = getPP(p, 1, pp, 1)
+                p2 = getPP(p, 2, pp, 2)
+                p3 = getPP(p, 3, pp, 3)
+                p4 = getPP(p, 4, pp, 4)
+                p5 = getPP(p, 5, pp, 5)
+
                 for item in items:
                     # print(item)
                     try:
                         # title = pdfh(item, p[1])
-                        p1 = getPP(p, 1, pp, 1)
                         title = ''.join([pdfh(item, i) for i in p1.split('||')])
                         try:
-                            p2 = getPP(p, 2, pp, 2)
                             img = pd(item, p2)
                         except:
                             img = ''
                         try:
-                            p3 = getPP(p, 3, pp, 3)
                             desc = pdfh(item, p3)
                         except:
                             desc = ''
                         if len(p) > 5 and p[5]:
-                            p5 = getPP(p, 5, pp, 5)
                             content = pdfh(item, p5)
                         else:
                             content = ''
                         # link = '$'.join([pd(item, p4) for p4 in p[4].split('+')])
-                        p4 = getPP(p, 4, pp, 4)
                         links = [pd(item, _p4) if not self.detailUrl else pdfh(item, _p4) for _p4 in p4.split('+')]
                         link = '$'.join(links)
                         # print(content)
@@ -1351,7 +1399,7 @@ class CMS:
         # print(play_url)
         if play_url.find('http') == -1: # 字符串看起来被编码的
             try:
-                play_url = baseDecode(play_url) # 自动base64解码
+                play_url = base64Decode(play_url) # 自动base64解码
             except:
                 pass
         # print(unquote(play_url))
