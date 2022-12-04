@@ -29,8 +29,8 @@
     <img src="https://img.shields.io/badge/license-AGPL3.0-orange" alt="License" />
   </a>
 
-<a href="https://gitcode.net/qq_32394351/dr_py">
-    <img src="https://img.shields.io/badge/coverage-99.9%25-yellowgreen" alt="License" />
+<a href="https://wwi.lanzoup.com/b041hfrwh">
+    <img src="https://img.shields.io/badge/coverage(3p5h)-99.9%25-yellowgreen" alt="License" />
   </a>
 </div>  
 
@@ -49,6 +49,28 @@
 [dockerfile教程](https://blog.csdn.net/qq_46158060/article/details/125718218)   
 [获取本地设备信息](https://blog.csdn.net/cui_yonghua/article/details/125508991)   
 [获取本地设备信息](https://m.jb51.net/article/140716.htm)
+###### 2022/12/4
+- [X] 修复js1 post搜索时未传递规则请求头信息bug
+- [X] alist.js更新,增加了首页推荐
+- [X] 仙人模式逻辑优化,增加ver参数,0,1,2。其中默认0为仙人自动识别,1为强制drpy.min.js,2为强制drpy2.min.js
+- [X] 默哀模式优化
+- [X] 更新部分py源
+###### 2022/12/2
+- [X] js0/js1 api更新，增加新特性:pagecount(单独指定某些分类的总页数)
+```json
+{"1":1,"2":1,"3":1,"4":1,"5":1,"7":1,"时间表":1}
+```
+- [X] 增加分类api无数据时显示一条提示数据防止软件无限请求
+- [X] 完善哔哩影视(drpy),共有两个环境变量 vmid,bili_cookie 需要自行设置,否则无法正常播放和搜索
+- [X] 优化哔哩影视(drpy),增加二级页面线路二，通过调用外部解析播放。默认线路1是内置cookie播放
+###### 2022/11/30
+- [X] 修复哔哩zb,jrkan zb无法播放问题
+###### 2022/11/29
+- [X] alist引用模块更换,配置支持pluto
+```json
+{"key":"Alist_pt","name":"Alist(pluto)","type":3,"api":"{{host}}/libs/alist.min.js","searchable":2,"quickSearch":0,"filterable":0,"ext":"{{host}}/config/2;200;video"},
+```
+- [X] v3.9.27beta1 drpy系列api引用模板优化,可以模板本地化
 ###### 2022/11/27
 - [X] 修复alist含字幕视频无法播放问题以及dsf文件无法显示问题
 - [X] drpy系列接口增加首页推荐和一级分类前两条数据打印
@@ -456,7 +478,9 @@ var rule = {
             parse:1,
         },
     }],
-    // 自定义免嗅
+    //控制不同分类栏目下的总页面,不填就是默认999.哔哩影视大部分分类无法翻页，都需要指定页数为 1
+    pagecount:{"1":1,"2":1,"3":1,"4":1,"5":1,"7":1,"时间表":1},
+    // 自定义免嗅 
     lazy:'',
     // 首页推荐显示数量
     limit:6,
@@ -500,4 +524,4 @@ class_parse:'.navbar-items li:gt(1):lt(7);a&&Text;a&&href;/(\\d+).html',
 }
 ```
 js:内置变量
-input,html,VODS,VOD,TABS,LISTS
+input,html,VODS,VOD,TABS,LISTS,MY_CATE,MY_FL

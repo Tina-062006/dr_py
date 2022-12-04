@@ -1,9 +1,12 @@
 import cheerio from 'https://gitcode.net/qq_32394351/dr_py/-/raw/master/libs/cheerio.min.js';
 import 'https://gitcode.net/qq_32394351/dr_py/-/raw/master/libs/crypto-js.js';
+import 模板 from 'https://gitcode.net/qq_32394351/dr_py/-/raw/master/js/模板.js';
 
 function init_test(){
     // console.log(typeof(CryptoJS));
     console.log("init_test_start");
+    // print(模板);
+    // print(typeof(模板.getMubans));
     console.log("当前版本号:"+VERSION);
     console.log(RKEY);
     console.log(JSON.stringify(rule));
@@ -31,7 +34,7 @@ function pre(){
 }
 
 let rule = {};
-const VERSION = 'drpy2 3.9.25beta1 20221126';
+const VERSION = 'drpy2 3.9.29 20221204';
 /** 已知问题记录
  * 1.影魔的jinjia2引擎不支持 {{fl}}对象直接渲染 (有能力解决的话尽量解决下，支持对象直接渲染字符串转义,如果加了|safe就不转义)[影魔牛逼，最新的文件发现这问题已经解决了]
  * Array.prototype.append = Array.prototype.push; 这种js执行后有毛病,for in 循环列表会把属性给打印出来 (这个大毛病需要重点排除一下)
@@ -1393,13 +1396,24 @@ function categoryParse(cateObj) {
     if(d.length>0){
         print(d.slice(0,2));
     }
-    return d.length<1?'{}':JSON.stringify({
+    let pagecount = 0;
+    if(rule.pagecount && typeof(rule.pagecount) === 'object' && rule.pagecount.hasOwnProperty(MY_CATE)){
+        print(`MY_CATE:${MY_CATE},pagecount:${JSON.stringify(rule.pagecount)}`);
+        pagecount = parseInt(rule.pagecount[MY_CATE]);
+    }
+    let nodata = {
+        list:[{vod_name:'无数据,防无限请求',vod_id:'no_data',vod_remarks:'不要点,会崩的',vod_pic:'https://ghproxy.com/https://raw.githubusercontent.com/hjdhnx/dr_py/main/404.jpg'}],
+        total:1,pagecount:1,page:1,limit:1
+    };
+    let vod =  d.length<1?JSON.stringify(nodata):JSON.stringify({
         'page': parseInt(cateObj.pg),
-        'pagecount': 999,
+        'pagecount': pagecount||999,
         'limit': 20,
         'total': 999,
         'list': d,
     });
+    // print(vod);
+    return vod
 }
 
 /**
@@ -1459,7 +1473,10 @@ function searchParse(searchObj) {
                 //     new_dict[i.split('=')[0]] = i.split('=')[1];
                 // });
                 // html = post(rurl,{body:new_dict});
-                html = post(rurl,{body:params});
+                let _fetch_params = JSON.parse(JSON.stringify(rule_fetch_params));
+                let postData = {body:params};
+                Object.assign(_fetch_params,postData);
+                html = post(rurl,_fetch_params);
             }else if(req_method==='postjson'){
                 let rurls = MY_URL.split(';')[0].split('#')
                 let rurl = rurls[0]
@@ -1470,7 +1487,10 @@ function searchParse(searchObj) {
                 }catch (e) {
                     params = '{}'
                 }
-                html = post(rurl,{body:params});
+                let _fetch_params = JSON.parse(JSON.stringify(rule_fetch_params));
+                let postData = {body:params};
+                Object.assign(_fetch_params,postData);
+                html = post(rurl,_fetch_params);
             }else{
                 html = getHtml(MY_URL);
             }
@@ -1902,13 +1922,17 @@ function init(ext) {
     console.log('init');
     try {
         // make shared jsContext happy muban不能import,不然会造成换源继承后变量被篡改
-        if (typeof (globalThis.mubanJs) === 'undefined') {
-            let mubanJs = request('https://gitcode.net/qq_32394351/dr_py/-/raw/master/js/模板.js', { 'User-Agent': MOBILE_UA });
-            mubanJs = mubanJs.replace('export default', '(function() {return muban;}()) // export default');
-            // console.log(mubanJs);
-            globalThis.mubanJs = mubanJs;
-        }
-        let muban = eval(globalThis.mubanJs);
+        // if (typeof (globalThis.mubanJs) === 'undefined') {
+        //     let mubanJs = request('https://gitcode.net/qq_32394351/dr_py/-/raw/master/js/模板.js', { 'User-Agent': MOBILE_UA });
+        //     mubanJs = mubanJs.replace('export default', '(function() {return muban;}()) // export default');
+        //     // console.log(mubanJs);
+        //     globalThis.mubanJs = mubanJs;
+        // }
+        // let muban = eval(globalThis.mubanJs);
+
+        let muban = 模板.getMubans();
+        // print(typeof (muban));
+        // print(muban);
         if (typeof ext == 'object'){
             rule = ext;
         } else if (typeof ext == 'string') {
@@ -1954,6 +1978,7 @@ function init(ext) {
         rule.encoding = rule.编码||rule.encoding||'utf-8';
         rule.图片来源 = rule.图片来源||'';
         rule.play_json = rule.hasOwnProperty('play_json')?rule.play_json:[];
+        rule.pagecount = rule.hasOwnProperty('pagecount')?rule.pagecount:{};
         if(rule.headers && typeof(rule.headers) === 'object'){
             try {
                 let header_keys = Object.keys(rule.headers);
