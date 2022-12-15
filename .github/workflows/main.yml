@@ -20,7 +20,7 @@ jobs:
     
     - name: Clone project
       run: |
-        git clone --depth=1 https://gitcode.net/qq_32394351/dr_py Projects
+        git clone --depth=1 https://gitcode.net/qq_32394351/drpy Projects
         cp -r Projects/* ${{ github.workspace }}
         rm -rf Projects
     - name: Update files
