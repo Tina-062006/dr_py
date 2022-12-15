@@ -1,0 +1,15 @@
+{
+  "name": "muban",
+  "version": "1.0.0",
+  "description": "",
+  "main": "URI.min.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "urijs": "^1.19.11"
+  }
+}

@@ -41,7 +41,7 @@
 
 [JS引擎的选择](./python最强js引擎.md)  
 [我的豆瓣](./static/img/豆瓣.png)  
-[搭建教程](./安卓本地搭建说明.md) | [install_help](https://jason-ray.notion.site/jason-ray/Pluto-TVB-706da08332804a19ab012b4f8385df64)  |[goorm](./道长乱说.md) |[大佬地盘](./大佬友链.md)   
+[搭建教程](./安卓本地搭建说明.md) | [爱看不看](https://jason-ray.notion.site/jason-ray/Pluto-TVB-706da08332804a19ab012b4f8385df64)  |[goorm](./道长乱说.md) |[大佬地盘](./大佬友链.md)   
 [dr项目QQ官群](https://qm.qq.com/cgi-bin/qm/qr?k=H2KwcXrMdiR5M2blHR5gjZzPfN_S3N_C&jump_from=webapi)  
 [参考T4](https://github.com/sec-an/TV_Spider/blob/main/spider/sp360.py)  
 [drpy相关视频教程](https://www.youtube.com/watch?v=AK7cN-fcwm4&t=3s)  
@@ -49,6 +49,9 @@
 [dockerfile教程](https://blog.csdn.net/qq_46158060/article/details/125718218)   
 [获取本地设备信息](https://blog.csdn.net/cui_yonghua/article/details/125508991)   
 [获取本地设备信息](https://m.jb51.net/article/140716.htm)
+###### 2022/12/12
+- [X] 增加哔哩自建解析和对应的环境变量:appkey,access_key (手机端抓包搜索可得)
+- [X] 修复部分源
 ###### 2022/12/6
 - [X] 增加外部更新环境变量的方法,详情参考 /py/外部更新环境变量.py,可以自行用js等其他语言实现调用
 ###### 2022/12/4
